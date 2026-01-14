@@ -1,36 +1,345 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ambag 🇵🇭
 
-## Getting Started
+**Everyone pays their ambag**
 
-First, run the development server:
+A modern, hassle-free bill-splitting app that makes group expenses simple. Built with Filipino values of fairness and community in mind.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 🌟 What is Ambag?
+
+**Ambag** (Tagalog/Filipino: "contribution" or "share") is a SaaS application that helps groups of friends, families, and roommates split expenses fairly and track who owes what.
+
+No more awkward conversations about money. No more spreadsheets. No more mental math. Just add the expense, and Ambag handles the rest.
+
+---
+
+## ✨ Features
+
+### MVP (Phase 1) - Current
+- 🔐 **User Authentication** - Secure signup with email/password and Google OAuth
+- 👥 **Group Management** - Create groups, invite friends via shareable links
+- 💰 **Expense Tracking** - Add expenses with custom splits (equal or custom amounts)
+- 📊 **Smart Balance Calculation** - Real-time balance updates and debt tracking
+- 🧮 **Debt Simplification Algorithm** - Minimize the number of transactions needed to settle up
+- 💳 **Settle Up** - Record payments and track settlement history
+- 🏷️ **Categories** - Organize expenses (Food, Rent, Entertainment, etc.)
+- 📱 **Responsive Design** - Works beautifully on mobile and desktop
+
+### Coming Soon (Phase 2)
+- 💱 Multi-currency support with live exchange rates
+- 💸 Payment gateway integration (Stripe, PayPal)
+- 🧾 Receipt uploads with OCR
+- 📧 Email notifications
+- 📲 Push notifications
+- 📱 Native mobile apps (iOS & Android)
+- 🔄 Recurring expenses
+- 💬 Expense comments
+- 📥 Export to CSV/PDF
+
+---
+
+## 🚀 Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | Next.js 14 (App Router), React, TypeScript |
+| **UI** | Tailwind CSS + shadcn/ui |
+| **Backend** | Next.js API Routes + Supabase |
+| **Database** | PostgreSQL (via Supabase) |
+| **Auth** | Supabase Auth |
+| **Deployment** | Vercel |
+| **State Management** | React Context + Zustand |
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────┐
+│   Browser   │
+└──────┬──────┘
+       │ HTTPS
+       ↓
+┌─────────────┐
+│  Next.js    │ ← Server-side rendering
+│  (Vercel)   │ ← API Routes
+└──────┬──────┘
+       │
+       ↓
+┌─────────────┐
+│  Supabase   │
+├─────────────┤
+│ PostgreSQL  │ ← Row Level Security
+│ Auth        │ ← JWT tokens
+│ Storage     │ ← (Future: receipts)
+└─────────────┘
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Multi-tenancy**: Group-based isolation with Row Level Security (RLS)
+**Security**: All database access enforced through RLS policies
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📦 Getting Started
 
-## Learn More
+### Prerequisites
+- Node.js 18+ and npm
+- Supabase account (free tier works!)
+- Vercel account (for deployment)
 
-To learn more about Next.js, take a look at the following resources:
+### Installation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/ambag.git
+   cd ambag
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-## Deploy on Vercel
+3. **Setup Supabase**
+   - Create a new project at [supabase.com](https://supabase.com)
+   - Run migrations from `supabase/migrations/` folder
+   - Enable Row Level Security on all tables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4. **Configure environment variables**
+   ```bash
+   cp .env.example .env.local
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   Edit `.env.local`:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   NEXT_PUBLIC_SITE_URL=http://localhost:3000
+   ```
+
+5. **Run development server**
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000)
+
+6. **Setup shadcn/ui** (if not already done)
+   ```bash
+   npx shadcn-ui@latest init
+   ```
+
+---
+
+## 📁 Project Structure
+
+```
+ambag/
+├── app/                      # Next.js App Router
+│   ├── (auth)/              # Authentication pages
+│   ├── (dashboard)/         # Protected dashboard pages
+│   ├── api/                 # API routes
+│   └── page.tsx             # Landing page
+├── components/              # React components
+│   ├── ui/                  # shadcn/ui components
+│   ├── auth/                # Auth components
+│   ├── groups/              # Group management
+│   ├── expenses/            # Expense tracking
+│   └── balances/            # Balance display
+├── lib/                     # Utilities and helpers
+│   ├── supabase/           # Supabase clients
+│   ├── algorithms/         # Core algorithms
+│   ├── utils/              # Helper functions
+│   └── types/              # TypeScript types
+├── hooks/                   # Custom React hooks
+├── supabase/               # Database migrations
+│   └── migrations/
+├── public/                  # Static assets
+└── docs/                    # Documentation
+```
+
+---
+
+## 🧮 How It Works
+
+### The Debt Simplification Algorithm
+
+**Problem**: When splitting expenses, you often end up with many small transactions between people.
+
+**Example**:
+```
+Before simplification:
+- Alice owes Bob $10
+- Bob owes Charlie $10
+- Charlie owes Alice $10
+
+After simplification:
+- 0 transactions! (everything cancels out)
+```
+
+**Our Solution**: Greedy algorithm that calculates net balances and minimizes transactions.
+
+```typescript
+// Simplified version
+1. Calculate each person's net balance (what they owe or are owed)
+2. Match creditors (people owed money) with debtors (people who owe)
+3. Settle largest amounts first
+4. Result: Minimum number of transactions
+```
+
+**Performance**: O(n log n) where n = number of people in group
+
+---
+
+## 🔒 Security
+
+- **Row Level Security (RLS)** - Users can only access their own groups and expenses
+- **JWT Authentication** - Secure token-based auth via Supabase
+- **Input Validation** - All inputs validated with Zod schemas
+- **HTTPS Only** - Enforced on Vercel
+- **SQL Injection Protection** - Parameterized queries via Supabase client
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run unit tests
+npm test
+
+# Run E2E tests
+npm run test:e2e
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+Key test areas:
+- ✅ Debt simplification algorithm
+- ✅ Balance calculation logic
+- ✅ Authentication flows
+- ✅ API route handlers
+- ✅ React components
+
+---
+
+## 🚀 Deployment
+
+### Deploy to Vercel
+
+1. **Push to GitHub**
+   ```bash
+   git push origin main
+   ```
+
+2. **Connect to Vercel**
+   - Go to [vercel.com](https://vercel.com)
+   - Import your GitHub repository
+   - Configure environment variables
+
+3. **Deploy!**
+   - Vercel automatically builds and deploys
+   - Your app is live at `your-app.vercel.app`
+
+### Environment Variables (Production)
+
+Set these in Vercel dashboard:
+```
+NEXT_PUBLIC_SUPABASE_URL=your_production_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_key
+SUPABASE_SERVICE_ROLE_KEY=your_production_service_key
+NEXT_PUBLIC_SITE_URL=https://your-domain.com
+```
+
+---
+
+## 📚 Documentation
+
+- [Development Roadmap](DEVELOPMENT_ROADMAP.md) - Week-by-week development plan
+- [Taskboard](TASKBOARD.md) - Visual kanban board for tracking progress
+- [Branding Guide](BRANDING.md) - Brand identity and messaging
+- [Architecture Plan](c:\Users\Lucas\.cursor\plans\splitwise_clone_architecture_98b956bb.plan.md) - Detailed technical architecture
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our contributing guidelines first.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 🐛 Bug Reports
+
+Found a bug? Please open an issue with:
+- Steps to reproduce
+- Expected behavior
+- Actual behavior
+- Screenshots (if applicable)
+- Browser/device info
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- Inspired by [Splitwise](https://www.splitwise.com)
+- Built with [Next.js](https://nextjs.org)
+- Powered by [Supabase](https://supabase.com)
+- UI components from [shadcn/ui](https://ui.shadcn.com)
+- Filipino community for the concept of "ambag"
+
+---
+
+## 💬 Support
+
+- 📧 Email: support@ambag.app
+- 💬 Discord: [Join our community](#)
+- 🐦 Twitter: [@ambagapp](#)
+
+---
+
+## 📊 Project Status
+
+**Current Phase**: 🟡 Planning & Setup
+**Target Launch**: Week 4 (End of January 2026)
+**MVP Progress**: 0% complete
+
+---
+
+## 🎯 Roadmap
+
+### ✅ Completed
+- [x] Architecture planning
+- [x] Brand identity
+- [x] Development roadmap
+
+### 🏗️ In Progress
+- [ ] Project setup
+- [ ] Database schema
+- [ ] Authentication
+
+### 📅 Upcoming
+- [ ] Group management
+- [ ] Expense tracking
+- [ ] Balance calculation
+- [ ] Settlement flow
+- [ ] Production deployment
+
+---
+
+**Made with ❤️ for the Filipino community and beyond**
+
+*Ambag - Because everyone should pay their share* 🇵🇭

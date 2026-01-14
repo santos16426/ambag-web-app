@@ -12,7 +12,7 @@
 
 # testing
 /coverage
-
+.cursor/
 # next.js
 /.next/
 /out/
@@ -39,3 +39,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+client_secret_145932308728-nho5pkqsu7ai7rr7v838rslpbp0kvibk.apps.googleusercontent.com.json
+
+supabase/
+
+AUTH_TESTING_GUIDE.md
+GOOGLE_OAUTH_SETUP.md
+SUPABASE_SETUP.md
+START_HERE.md
+DEVELOPMENT_ROADMAP.md
+PROJECT_STATUS.md
+QUICK_START.md
+TASKBOARD.md
+SETUP_INSTRUCTIONS.md
