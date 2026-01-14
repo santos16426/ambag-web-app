@@ -45,6 +45,7 @@ client_secret_145932308728-nho5pkqsu7ai7rr7v838rslpbp0kvibk.apps.googleuserconte
 
 supabase/
 
+# Documentation
 AUTH_TESTING_GUIDE.md
 GOOGLE_OAUTH_SETUP.md
 SUPABASE_SETUP.md
@@ -54,3 +55,6 @@ PROJECT_STATUS.md
 QUICK_START.md
 TASKBOARD.md
 SETUP_INSTRUCTIONS.md
+
+# lock files
+package-lock.json
