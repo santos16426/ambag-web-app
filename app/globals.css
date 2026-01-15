@@ -29,14 +29,16 @@ html {
   scroll-behavior: smooth;
 }
 
-html, body {
+html,
+body {
   height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "kern" 1, "liga" 1;
@@ -44,7 +46,12 @@ body {
 }
 
 /* Typography Improvements */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -83,12 +90,14 @@ p {
 .neumorph {
   background: #fafbfc;
   border-radius: 25px;
-  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.08), -10px -10px 20px rgba(255, 255, 255, 0.95);
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.08),
+    -10px -10px 20px rgba(255, 255, 255, 0.95);
   transition: all 200ms ease;
 }
 
 .neumorph:hover {
-  box-shadow: 14px 14px 26px rgba(0, 0, 0, 0.1), -14px -14px 26px rgba(255, 255, 255, 0.98);
+  box-shadow: 14px 14px 26px rgba(0, 0, 0, 0.1),
+    -14px -14px 26px rgba(255, 255, 255, 0.98);
   transform: translateY(-2px);
 }
 
@@ -101,35 +110,41 @@ p {
   font-weight: 600;
   background: #fafbfc;
   color: #1a1a1a;
-  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.06), -8px -8px 16px rgba(255, 255, 255, 0.95);
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.06),
+    -8px -8px 16px rgba(255, 255, 255, 0.95);
   transition: all 200ms ease;
   border: none;
   cursor: pointer;
 }
 
 .btn-neu:hover {
-  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.08), -10px -10px 20px rgba(255, 255, 255, 0.98);
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.08),
+    -10px -10px 20px rgba(255, 255, 255, 0.98);
   transform: translateY(-2px);
 }
 
 .btn-neu:active {
-  box-shadow: inset 6px 6px 12px rgba(0, 0, 0, 0.06), inset -6px -6px 12px rgba(255, 255, 255, 0.95);
+  box-shadow: inset 6px 6px 12px rgba(0, 0, 0, 0.06),
+    inset -6px -6px 12px rgba(255, 255, 255, 0.95);
   transform: translateY(0);
 }
 
 .btn-gradient {
   background: linear-gradient(90deg, var(--accent-start), var(--accent-end));
   color: #0a3d66;
-  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.06), -8px -8px 16px rgba(255, 255, 255, 0.95);
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.06),
+    -8px -8px 16px rgba(255, 255, 255, 0.95);
 }
 
 .btn-gradient:hover {
-  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.08), -10px -10px 20px rgba(255, 255, 255, 0.98);
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.08),
+    -10px -10px 20px rgba(255, 255, 255, 0.98);
   transform: translateY(-2px);
 }
 
 .btn-gradient:active {
-  box-shadow: inset 6px 6px 12px rgba(0, 0, 0, 0.06), inset -6px -6px 12px rgba(255, 255, 255, 0.95);
+  box-shadow: inset 6px 6px 12px rgba(0, 0, 0, 0.06),
+    inset -6px -6px 12px rgba(255, 255, 255, 0.95);
   transform: translateY(0);
 }
 
@@ -160,7 +175,7 @@ p {
 }
 
 .jagged-edge-bottom::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -1px;
   left: 0;
@@ -233,7 +248,7 @@ p {
 
 .receipt-box::before,
 .receipt-box::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   right: 0;
@@ -361,16 +376,41 @@ p {
 
 /* Receipt Pattern Background */
 .receipt-pattern {
-  background-image: 
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.03) 2px,
-      rgba(0, 0, 0, 0.03) 4px
-    );
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
 }
-
+.receipt {
+  position: relative;
+}
+.receipt::before {
+  position: absolute;
+  content: "";
+  display: block;
+  background: linear-gradient(45deg, white 25%, transparent 25%),
+    linear-gradient(-45deg, white 25%, transparent 25%);
+  background-size: 20px 20px;
+  height: 20px;
+  width: 100%;
+  top: -20px;
+  left: 0;
+}
+.receipt::after {
+  position: absolute;
+  content: "";
+  display: block;
+  background: linear-gradient(135deg, white 25%, transparent 25%),
+    linear-gradient(-135deg, white 25%, transparent 25%);
+  background-size: 20px 20px;
+  height: 20px;
+  width: 100%;
+  bottom: -20px;
+  left: 0;
+}
 /* Gradient Backgrounds */
 .gradient-bg-1 {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
