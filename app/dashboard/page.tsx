@@ -1,8 +1,25 @@
+// app/dashboard/page.tsx
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import LogoutButton from "@/components/auth/LogoutButton";
-import "../globals.css";
+import { Layout } from "@/components/layout/Layout";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
+import type { UserType } from "@/lib/types";
+
+function toUserType(u: SupabaseUser): UserType {
+  return {
+    email: u.email ?? "",
+    name: u.user_metadata?.full_name ?? u.user_metadata?.name ?? "",
+    avatar_url: u.user_metadata?.avatar_url ?? null,
+    id: u.id,
+    full_name: u.user_metadata?.full_name ?? u.user_metadata?.name ?? "",
+    email_verified: u.user_metadata.email_verified ?? "",
+    iss: u.user_metadata.iss ?? "",
+    phone_verified: u.user_metadata.phone_verified ?? "",
+    picture: u.user_metadata.picture ?? null,
+    provider_id: u.user_metadata.provider_id ?? "",
+    sub: u.user_metadata.sub ?? "",
+  };
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -14,39 +31,17 @@ export default async function DashboardPage() {
   if (!user) {
     redirect("/login");
   }
+  const safeUser = user as SupabaseUser;
 
+  const userData: UserType = toUserType(safeUser);
+  console.log(userData);
   return (
-    <div
-      className='min-h-screen bg-[#e8e8e8
-]'
-    >
-      {/* Top Navigation */}
-      <nav className='border-b border-gray-100 shadow-lg fixed w-full bg-[white]'>
-        <div className='px-24 py-5'>
-          <div className='flex justify-between items-center'>
-            <div className='text-xl font-semibold'>
-              <Link href='/'>Ambag</Link>
-            </div>
-
-            <div className='flex items-center gap-4'>
-              <Link
-                href='/test-auth'
-                className='inline-block px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors'
-              >
-                View Auth Details
-              </Link>
-              <span className='text-sm text-gray-500'>{user.email}</span>
-              <LogoutButton />
-            </div>
-          </div>
-        </div>
-      </nav>
+    <Layout userData={userData}>
       <div className='grid grid-cols-9 min-h-screen w-full px-24 pt-32'>
         <div className='col-span-2 h-full w-full'>
-          {/* nav links */}
-          <div className=''>
+          <div>
             <ul>
-              <li className=''>
+              <li>
                 <button className='neumorphic-button'>Dashboard</button>
               </li>
               <li>Group</li>
@@ -54,11 +49,8 @@ export default async function DashboardPage() {
             </ul>
           </div>
         </div>
-        <div className='col-span-7 h-full w-full'>
-          {/* content */}
-          content
-        </div>
+        <div className='col-span-7 h-full w-full'>content</div>
       </div>
-    </div>
+    </Layout>
   );
 }

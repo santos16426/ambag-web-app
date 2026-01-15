@@ -16,3 +16,5 @@
 - **Next.js Image Optimization** - Configured Next.js for Unsplash image optimization
 
 - **Redesign Landing Page** - Updated hero banner, pricing, customer
+
+- **Added layout to Dashboard/User Page** - Added layout to dashboard/user page.
