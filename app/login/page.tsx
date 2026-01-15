@@ -53,11 +53,7 @@ export default function LoginPage() {
       });
 
       if (error) throw error;
-      console.log(data);
-      // if (data.user) {
-      //   router.push('/dashboard');
-      //   router.refresh();
-      // }
+
     } catch (error) {
       console.error("Login error:", error);
       const errorMessage =

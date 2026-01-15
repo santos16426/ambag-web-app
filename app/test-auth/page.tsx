@@ -13,13 +13,11 @@ export default async function TestAuthPage() {
     redirect("/login");
   }
 
-  // Get user profile from database
   const { data: profile } = await supabase
     .from("users")
     .select("*")
     .eq("id", user.id)
     .single();
-  console.log(profile);
   return (
     <div className='min-h-screen bg-white p-8'>
       <div className='max-w-2xl mx-auto'>

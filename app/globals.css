@@ -2,25 +2,384 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1a1a1a;
+  --muted: #888888;
+  --accent-pastel-blue: #c9e4ff; /* soft pastel blue */
+  --accent-pastel-blue-2: #9acfff;
+  --accent-start: var(--accent-pastel-blue);
+  --accent-end: var(--accent-pastel-blue-2);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0b0b0b;
+    --foreground: #f8f8f8;
+    --muted: #bfbfbf;
+    --accent-start: #0b0b0b;
+    --accent-end: #1f2937;
   }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html, body {
+  height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "kern" 1, "liga" 1;
+  text-rendering: optimizeLegibility;
+}
+
+/* Typography Improvements */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.2;
+}
+
+h3 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.3;
+}
+
+p {
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+/* Glass Navigation Effect */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+}
+
+/* True Neumorphic Design - White Theme */
+.neumorph {
+  background: #fafbfc;
+  border-radius: 25px;
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.08), -10px -10px 20px rgba(255, 255, 255, 0.95);
+  transition: all 200ms ease;
+}
+
+.neumorph:hover {
+  box-shadow: 14px 14px 26px rgba(0, 0, 0, 0.1), -14px -14px 26px rgba(255, 255, 255, 0.98);
+  transform: translateY(-2px);
+}
+
+.btn-neu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.35rem;
+  border-radius: 25px;
+  font-weight: 600;
+  background: #fafbfc;
+  color: #1a1a1a;
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.06), -8px -8px 16px rgba(255, 255, 255, 0.95);
+  transition: all 200ms ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-neu:hover {
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.08), -10px -10px 20px rgba(255, 255, 255, 0.98);
+  transform: translateY(-2px);
+}
+
+.btn-neu:active {
+  box-shadow: inset 6px 6px 12px rgba(0, 0, 0, 0.06), inset -6px -6px 12px rgba(255, 255, 255, 0.95);
+  transform: translateY(0);
+}
+
+.btn-gradient {
+  background: linear-gradient(90deg, var(--accent-start), var(--accent-end));
+  color: #0a3d66;
+  box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.06), -8px -8px 16px rgba(255, 255, 255, 0.95);
+}
+
+.btn-gradient:hover {
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.08), -10px -10px 20px rgba(255, 255, 255, 0.98);
+  transform: translateY(-2px);
+}
+
+.btn-gradient:active {
+  box-shadow: inset 6px 6px 12px rgba(0, 0, 0, 0.06), inset -6px -6px 12px rgba(255, 255, 255, 0.95);
+  transform: translateY(0);
+}
+
+.card-muted {
+  background: transparent;
+  border-radius: 12px;
+  padding: 1rem;
+  color: var(--muted);
+}
+.nav-link {
+  color: var(--muted);
+  transition: color 160ms ease, transform 160ms ease;
+}
+
+.nav-link:hover {
+  color: var(--foreground);
+  transform: translateY(-1px);
+}
+
+.shadow-subtle {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* Jagged Edge Effect - Like a Receipt/Bill */
+.jagged-edge-bottom {
+  position: relative;
+  padding-bottom: 2rem;
+}
+
+.jagged-edge-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: inherit;
+  clip-path: polygon(
+    0% 0%,
+    2% 50%,
+    4% 0%,
+    6% 50%,
+    8% 0%,
+    10% 50%,
+    12% 0%,
+    14% 50%,
+    16% 0%,
+    18% 50%,
+    20% 0%,
+    22% 50%,
+    24% 0%,
+    26% 50%,
+    28% 0%,
+    30% 50%,
+    32% 0%,
+    34% 50%,
+    36% 0%,
+    38% 50%,
+    40% 0%,
+    42% 50%,
+    44% 0%,
+    46% 50%,
+    48% 0%,
+    50% 50%,
+    52% 0%,
+    54% 50%,
+    56% 0%,
+    58% 50%,
+    60% 0%,
+    62% 50%,
+    64% 0%,
+    66% 50%,
+    68% 0%,
+    70% 50%,
+    72% 0%,
+    74% 50%,
+    76% 0%,
+    78% 50%,
+    80% 0%,
+    82% 50%,
+    84% 0%,
+    86% 50%,
+    88% 0%,
+    90% 50%,
+    92% 0%,
+    94% 50%,
+    96% 0%,
+    98% 50%,
+    100% 0%,
+    100% 100%,
+    0% 100%
+  );
+}
+
+/* Receipt Box with Jagged Edges */
+.receipt-box {
+  position: relative;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.receipt-box::before,
+.receipt-box::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: white;
+}
+
+.receipt-box::before {
+  top: -1px;
+  clip-path: polygon(
+    0% 100%,
+    2% 50%,
+    4% 100%,
+    6% 50%,
+    8% 100%,
+    10% 50%,
+    12% 100%,
+    14% 50%,
+    16% 100%,
+    18% 50%,
+    20% 100%,
+    22% 50%,
+    24% 100%,
+    26% 50%,
+    28% 100%,
+    30% 50%,
+    32% 100%,
+    34% 50%,
+    36% 100%,
+    38% 50%,
+    40% 100%,
+    42% 50%,
+    44% 100%,
+    46% 50%,
+    48% 100%,
+    50% 50%,
+    52% 100%,
+    54% 50%,
+    56% 100%,
+    58% 50%,
+    60% 100%,
+    62% 50%,
+    64% 100%,
+    66% 50%,
+    68% 100%,
+    70% 50%,
+    72% 100%,
+    74% 50%,
+    76% 100%,
+    78% 50%,
+    80% 100%,
+    82% 50%,
+    84% 100%,
+    86% 50%,
+    88% 100%,
+    90% 50%,
+    92% 100%,
+    94% 50%,
+    96% 100%,
+    98% 50%,
+    100% 100%,
+    100% 0%,
+    0% 0%
+  );
+}
+
+.receipt-box::after {
+  bottom: -1px;
+  clip-path: polygon(
+    0% 0%,
+    2% 50%,
+    4% 0%,
+    6% 50%,
+    8% 0%,
+    10% 50%,
+    12% 0%,
+    14% 50%,
+    16% 0%,
+    18% 50%,
+    20% 0%,
+    22% 50%,
+    24% 0%,
+    26% 50%,
+    28% 0%,
+    30% 50%,
+    32% 0%,
+    34% 50%,
+    36% 0%,
+    38% 50%,
+    40% 0%,
+    42% 50%,
+    44% 0%,
+    46% 50%,
+    48% 0%,
+    50% 50%,
+    52% 0%,
+    54% 50%,
+    56% 0%,
+    58% 50%,
+    60% 0%,
+    62% 50%,
+    64% 0%,
+    66% 50%,
+    68% 0%,
+    70% 50%,
+    72% 0%,
+    74% 50%,
+    76% 0%,
+    78% 50%,
+    80% 0%,
+    82% 50%,
+    84% 0%,
+    86% 50%,
+    88% 0%,
+    90% 50%,
+    92% 0%,
+    94% 50%,
+    96% 0%,
+    98% 50%,
+    100% 0%,
+    100% 100%,
+    0% 100%
+  );
+}
+
+/* Receipt Pattern Background */
+.receipt-pattern {
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    );
+}
+
+/* Gradient Backgrounds */
+.gradient-bg-1 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-bg-2 {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.gradient-bg-3 {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
