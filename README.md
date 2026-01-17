@@ -327,9 +327,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [x] Development roadmap
 
 ### 🏗️ In Progress
-- [ ] Project setup
-- [ ] Database schema
-- [ ] Authentication
+- [x] Project setup
+- [x] Database schema
+- [x] Authentication
 
 ### 📅 Upcoming
 - [ ] Group management

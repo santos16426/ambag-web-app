@@ -1,16 +1,20 @@
 import { UserType } from "@/lib/types";
-import { Header } from "./Header";
 import { PropsWithChildren } from "react";
+import { ClientLayout } from "./ClientLayout";
+import { cookies } from "next/headers"
+
 type LayoutProps = PropsWithChildren<{
   children: React.ReactNode;
   userData: UserType;
 }>;
 
-export function Layout({ userData, children }: LayoutProps) {
+export async function Layout({ userData, children }: LayoutProps) {
+  const cookieStore = await cookies()
+  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
+
   return (
-    <div className='min-h-screen bg-[#e8e8e8]'>
-      <Header {...userData} />
-      <main className='-mt-23 '>{children}</main>
-    </div>
-  );
+    <ClientLayout userData={userData} defaultOpen={defaultOpen}>
+      {children}
+    </ClientLayout>
+  )
 }
