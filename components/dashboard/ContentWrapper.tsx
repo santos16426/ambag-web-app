@@ -2,8 +2,22 @@
 
 import { useSidebar } from "@/components/ui/sidebar";
 import { GroupsList } from "./GroupsList";
+import { useEffect, useState } from "react";
+
 export function Content() {
   const { activeMenu } = useSidebar()
+  const [mounted, setMounted] = useState(false)
+
+  // Prevent hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Show nothing during SSR/hydration
+  if (!mounted) {
+    return null
+  }
+
   if(activeMenu === "Dashboard") {
     return (
       <div>
