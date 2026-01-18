@@ -1,7 +1,7 @@
 // Example: Server Component usage in dashboard page
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { getAllMyGroupsWithDetails } from "@/lib/supabase/queries/groups.server";
+import { getAllMyGroupsWithDetails } from "@/lib/supabase/queries/server";
 
 export default async function GroupsPage() {
   const supabase = await createClient();
