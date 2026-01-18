@@ -2,16 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Receipt, DollarSign, TrendingUp, Users } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 import { useActiveGroup } from "@/lib/store/groupStore";
 import { ExpensesList } from "@/components/expenses/ExpensesList";
 import { getGroupExpenses } from "@/lib/supabase/queries/expenses";
+import { getGroupMembers } from "@/lib/supabase/queries/client";
 import type { Expense } from "@/types/expense";
+import type { GroupMember } from "@/types/group";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getUserBalance } from "@/lib/utils/balance";
+import { useUserId } from "@/lib/store/userStore";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function GroupExpensesSection() {
   const activeGroup = useActiveGroup();
+  const userId = useUserId();
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [members, setMembers] = useState<GroupMember[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,24 +28,52 @@ export function GroupExpensesSection() {
       return;
     }
 
-    async function fetchExpenses() {
+    async function fetchData() {
       if (!activeGroup?.id) return;
       setLoading(true);
       try {
-        const result = await getGroupExpenses(activeGroup.id);
-        if (result.error) {
-          console.error("Error fetching expenses:", result.error);
+        const [expensesResult, membersResult] = await Promise.all([
+          getGroupExpenses(activeGroup.id),
+          getGroupMembers(activeGroup.id),
+        ]);
+
+        if (expensesResult.error) {
+          console.error("Error fetching expenses:", expensesResult.error);
         } else {
-          setExpenses(result.data || []);
+          setExpenses(expensesResult.data || []);
+        }
+
+        if (membersResult.error) {
+          console.error("Error fetching members:", membersResult.error);
+        } else if (membersResult.data) {
+          // Transform the data to match GroupMember type
+          const transformedMembers: GroupMember[] = membersResult.data
+            .map((item: any) => {
+              const user = Array.isArray(item.user) ? item.user[0] : item.user;
+              if (!user) return null;
+              return {
+                id: item.id,
+                role: item.role as "admin" | "member",
+                joined_at: item.joined_at,
+                user: {
+                  id: user.id,
+                  email: user.email,
+                  full_name: user.full_name,
+                  avatar_url: user.avatar_url,
+                },
+              };
+            })
+            .filter((m): m is GroupMember => m !== null);
+          setMembers(transformedMembers);
         }
       } catch (error) {
-        console.error("Error fetching expenses:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchExpenses();
+    fetchData();
   }, [activeGroup?.id]);
 
   // Don't render if no active group
@@ -46,21 +81,18 @@ export function GroupExpensesSection() {
     return null;
   }
 
-  // Calculate summary statistics
-  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const expenseCount = expenses.length;
-  const avgExpense = expenseCount > 0 ? totalExpenses / expenseCount : 0;
+  // Calculate balances
+  const userBalance = userId
+    ? getUserBalance(expenses, members, userId)
+    : null;
 
-  // Get category breakdown
-  const categoryBreakdown = expenses.reduce((acc, exp) => {
-    const category = exp.category || "Other";
-    acc[category] = (acc[category] || 0) + exp.amount;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const topCategory = Object.entries(categoryBreakdown).sort(
-    ([, a], [, b]) => b - a
-  )[0];
+  const totalOwed = userBalance
+    ? userBalance.owesTo.reduce((sum, o) => sum + o.amount, 0)
+    : 0;
+  const totalOwedToYou = userBalance
+    ? userBalance.owedBy.reduce((sum, o) => sum + o.amount, 0)
+    : 0;
+  const netBalance = userBalance ? userBalance.netBalance : 0;
 
   return (
     <div className="space-y-6 pt-8 border-t border-border">
@@ -75,67 +107,156 @@ export function GroupExpensesSection() {
         </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* Balance Summary Card */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <Skeleton className="h-8 w-24 mb-2" />
-                <Skeleton className="h-4 w-32" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-4">
+            <Skeleton className="h-6 w-32 mb-4" />
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold">${totalExpenses.toFixed(2)}</div>
-              <div className="text-sm text-muted-foreground">Total Expenses</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <Receipt className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold">{expenseCount}</div>
-              <div className="text-sm text-muted-foreground">Total Count</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold">${avgExpense.toFixed(2)}</div>
-              <div className="text-sm text-muted-foreground">
-                Average Expense
-                {topCategory && (
-                  <span className="block text-xs mt-1">
-                    Top: {topCategory[0]} (${topCategory[1].toFixed(2)})
-                  </span>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-semibold">Balance Summary</h4>
+              <div className="flex items-center gap-4">
+                {totalOwed > 0 && (
+                  <div className="text-right">
+                    <div className="text-xs text-muted-foreground">You Owe</div>
+                    <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                      ${totalOwed.toFixed(2)}
+                    </div>
+                  </div>
+                )}
+                {totalOwedToYou > 0 && (
+                  <div className="text-right">
+                    <div className="text-xs text-muted-foreground">You're Owed</div>
+                    <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                      ${totalOwedToYou.toFixed(2)}
+                    </div>
+                  </div>
+                )}
+                {totalOwed === 0 && totalOwedToYou === 0 && (
+                  <div className="text-sm text-muted-foreground">All settled up!</div>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* You Owe Section */}
+              {userBalance && userBalance.owesTo.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <ArrowUpCircle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                    <span className="text-xs font-medium text-muted-foreground">
+                      You Owe ({userBalance.owesTo.length})
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 pl-6">
+                    {userBalance.owesTo.map((owe) => {
+                      const member = members.find((m) => m.user.id === owe.userId);
+                      return (
+                        <div
+                          key={owe.userId}
+                          className="flex items-center justify-between text-xs"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Avatar className="w-5 h-5">
+                              <AvatarImage
+                                src={member?.user.avatar_url || undefined}
+                              />
+                              <AvatarFallback className="text-[10px]">
+                                {member?.user.full_name?.[0]?.toUpperCase() ||
+                                  member?.user.email[0]?.toUpperCase() ||
+                                  "?"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-muted-foreground">
+                              {member?.user.full_name || member?.user.email || "Unknown"}
+                            </span>
+                          </div>
+                          <span className="font-medium text-orange-600 dark:text-orange-400">
+                            ${owe.amount.toFixed(2)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* You're Owed Section */}
+              {userBalance && userBalance.owedBy.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <ArrowDownCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <span className="text-xs font-medium text-muted-foreground">
+                      You're Owed ({userBalance.owedBy.length})
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 pl-6">
+                    {userBalance.owedBy.map((owed) => {
+                      const member = members.find((m) => m.user.id === owed.userId);
+                      return (
+                        <div
+                          key={owed.userId}
+                          className="flex items-center justify-between text-xs"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Avatar className="w-5 h-5">
+                              <AvatarImage
+                                src={member?.user.avatar_url || undefined}
+                              />
+                              <AvatarFallback className="text-[10px]">
+                                {member?.user.full_name?.[0]?.toUpperCase() ||
+                                  member?.user.email[0]?.toUpperCase() ||
+                                  "?"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-muted-foreground">
+                              {member?.user.full_name || member?.user.email || "Unknown"}
+                            </span>
+                          </div>
+                          <span className="font-medium text-green-600 dark:text-green-400">
+                            ${owed.amount.toFixed(2)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* All Settled */}
+              {userBalance && userBalance.owesTo.length === 0 && userBalance.owedBy.length === 0 && (
+                <div className="text-center py-4 text-sm text-muted-foreground">
+                  All expenses are settled up! 🎉
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Expenses List */}
-      <ExpensesList groupId={activeGroup.id} />
+      <ExpensesList
+        groupId={activeGroup.id}
+        onExpensesUpdate={() => {
+          // Refresh expenses when updated
+          if (activeGroup?.id) {
+            getGroupExpenses(activeGroup.id).then((result) => {
+              if (result.data) {
+                setExpenses(result.data);
+              }
+            });
+          }
+        }}
+      />
     </div>
   );
 }

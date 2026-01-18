@@ -371,6 +371,29 @@ export async function updateExpense(
 }
 
 /**
+ * Update payment status for a participant
+ * Use in Client Components or Server Actions
+ */
+export async function updateParticipantPayment(
+  participantId: string,
+  amountPaid: number
+): Promise<{ error: Error | null }> {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("expense_participants")
+    .update({ amount_paid: amountPaid })
+    .eq("id", participantId);
+
+  if (error) {
+    console.error("Error updating participant payment:", error);
+    return { error };
+  }
+
+  return { error: null };
+}
+
+/**
  * Delete an expense
  * Use in Client Components or Server Actions
  */
