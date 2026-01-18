@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X, Mail, UserPlus, Check } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { searchUserByEmailAction } from "@/hooks/users";
 
 export type MemberInvite = {
   id: string;
@@ -21,81 +22,112 @@ interface MemberSearchProps {
 }
 
 export function MemberSearch({ selectedMembers, onAddMember, onRemoveMember }: MemberSearchProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<MemberInvite[]>([]);
+  const [emailInput, setEmailInput] = useState("");
+  const [searchResult, setSearchResult] = useState<MemberInvite | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [showResults, setShowResults] = useState(false);
+  const [showResult, setShowResult] = useState(false);
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
+  // Simple email validation regex
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
 
-    if (query.length < 2) {
-      setSearchResults([]);
-      setShowResults(false);
+  const handleEmailChange = async (email: string) => {
+    setEmailInput(email);
+
+    // Reset if empty
+    if (!email.trim()) {
+      setSearchResult(null);
+      setShowResult(false);
+      return;
+    }
+
+    // Only search if valid email format
+    if (!isValidEmail(email)) {
+      setSearchResult(null);
+      setShowResult(false);
       return;
     }
 
     setIsSearching(true);
-    setShowResults(true);
+    setShowResult(true);
 
-    // TODO: Replace with actual API call to search users
-    // Simulated search
-    await new Promise(resolve => setTimeout(resolve, 300));
+    try {
+      const { data, error } = await searchUserByEmailAction(email);
 
-    // Mock results
-    const mockResults: MemberInvite[] = [
-      {
-        id: 'user-1',
-        email: `${query}@example.com`,
-        full_name: query.charAt(0).toUpperCase() + query.slice(1),
-        avatar_url: null,
-        isExistingUser: true
+      if (error) {
+        console.error('Search error:', error);
+        setSearchResult(null);
+        setIsSearching(false);
+        return;
       }
-    ];
 
-    setSearchResults(mockResults);
-    setIsSearching(false);
+      if (data) {
+        // User exists
+        setSearchResult({
+          id: data.id,
+          email: data.email,
+          full_name: data.full_name,
+          avatar_url: data.avatar_url,
+          isExistingUser: true
+        });
+      } else {
+        // User doesn't exist - will send invite
+        setSearchResult({
+          id: `invite-${Date.now()}`,
+          email: email,
+          full_name: null,
+          avatar_url: null,
+          isExistingUser: false
+        });
+      }
+    } catch (err) {
+      console.error('Search error:', err);
+      setSearchResult(null);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
-  const handleAddByEmail = () => {
-    if (!searchQuery.includes('@')) return;
+  const handleAddMember = () => {
+    if (!searchResult) return;
 
-    const emailMember: MemberInvite = {
-      id: `email-${Date.now()}`,
-      email: searchQuery,
-      full_name: null,
-      avatar_url: null,
-      isExistingUser: false
-    };
+    // Check if already added
+    const alreadyAdded = selectedMembers.some(m =>
+      m.email.toLowerCase() === searchResult.email.toLowerCase()
+    );
 
-    onAddMember(emailMember);
-    setSearchQuery("");
-    setSearchResults([]);
-    setShowResults(false);
+    if (alreadyAdded) return;
+
+    onAddMember(searchResult);
+    setEmailInput("");
+    setSearchResult(null);
+    setShowResult(false);
   };
 
-  const isAlreadyAdded = (id: string) => {
-    return selectedMembers.some(m => m.id === id);
+  const isAlreadyAdded = (email: string) => {
+    return selectedMembers.some(m => m.email.toLowerCase() === email.toLowerCase());
   };
 
   return (
     <div className="space-y-3">
-      {/* Search Input */}
+      {/* Email Input */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Search by name or email..."
-          value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
-          onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
+          type="email"
+          placeholder="Enter email address..."
+          value={emailInput}
+          onChange={(e) => handleEmailChange(e.target.value)}
+          onFocus={() => emailInput && setShowResult(true)}
           className="pl-10 pr-10"
         />
-        {searchQuery && (
+        {emailInput && (
           <button
             onClick={() => {
-              setSearchQuery("");
-              setSearchResults([]);
-              setShowResults(false);
+              setEmailInput("");
+              setSearchResult(null);
+              setShowResult(false);
             }}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
@@ -103,64 +135,90 @@ export function MemberSearch({ selectedMembers, onAddMember, onRemoveMember }: M
           </button>
         )}
 
-        {/* Search Results Dropdown */}
-        {showResults && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+        {/* Search Result Dropdown */}
+        {showResult && isValidEmail(emailInput) && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg z-50">
             {isSearching ? (
               <div className="p-4 text-center text-sm text-muted-foreground">
-                Searching...
+                Checking email...
               </div>
-            ) : searchResults.length > 0 ? (
-              <div className="py-1">
-                {searchResults.map((result) => (
-                  <button
-                    key={result.id}
-                    onClick={() => {
-                      if (!isAlreadyAdded(result.id)) {
-                        onAddMember(result);
-                        setSearchQuery("");
-                        setShowResults(false);
-                      }
-                    }}
-                    disabled={isAlreadyAdded(result.id)}
-                    className="w-full px-3 py-2 flex items-center gap-3 hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={result.avatar_url || undefined} />
-                      <AvatarFallback className="text-xs">
-                        {result.full_name?.charAt(0) || result.email.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 text-left">
-                      <p className="text-sm font-medium">{result.full_name || result.email}</p>
-                      {result.full_name && (
-                        <p className="text-xs text-muted-foreground">{result.email}</p>
-                      )}
-                    </div>
-                    {isAlreadyAdded(result.id) && (
-                      <Check className="w-4 h-4 text-green-500" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            ) : searchQuery.includes('@') ? (
+            ) : searchResult ? (
               <div className="p-3">
-                <p className="text-sm text-muted-foreground mb-2">User not found</p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleAddByEmail}
-                  className="w-full gap-2"
-                >
-                  <Mail className="w-4 h-4" />
-                  Send invite to {searchQuery}
-                </Button>
+                {searchResult.isExistingUser ? (
+                  // Existing user
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-10 h-10">
+                        <AvatarImage src={searchResult.avatar_url || undefined} />
+                        <AvatarFallback className="text-sm">
+                          {searchResult.full_name?.charAt(0) || searchResult.email.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{searchResult.full_name || 'User'}</p>
+                        <p className="text-xs text-muted-foreground">{searchResult.email}</p>
+                      </div>
+                      <UserPlus className="w-4 h-4 text-green-500" />
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={handleAddMember}
+                      disabled={isAlreadyAdded(searchResult.email)}
+                      className="w-full"
+                    >
+                      {isAlreadyAdded(searchResult.email) ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2" />
+                          Already Added
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Add Member
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  // Non-existing user - will invite
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                        <Mail className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">User not found</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {searchResult.email}
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          Will send email invitation
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleAddMember}
+                      disabled={isAlreadyAdded(searchResult.email)}
+                      className="w-full gap-2"
+                    >
+                      {isAlreadyAdded(searchResult.email) ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Already Added
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="w-4 h-4" />
+                          Add & Send Invite
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                No users found
-              </div>
-            )}
+            ) : null}
           </div>
         )}
       </div>
@@ -185,6 +243,9 @@ export function MemberSearch({ selectedMembers, onAddMember, onRemoveMember }: M
                 <span className="font-medium">
                   {member.full_name || member.email}
                 </span>
+                {!member.isExistingUser && (
+                  <span className="text-xs text-muted-foreground">(invite)</span>
+                )}
                 <button
                   onClick={() => onRemoveMember(member.id)}
                   className="hover:text-destructive transition-colors"

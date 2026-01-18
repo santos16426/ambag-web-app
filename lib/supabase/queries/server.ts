@@ -86,7 +86,7 @@ export async function getMyCreatedGroups(userId: string): Promise<GroupsQueryRes
 }
 
 /**
- * Fetch all groups (created + member of) with member counts
+ * Fetch all groups (created + member of) with member counts (including pending invitations)
  * Use in Server Components
  */
 export async function getAllMyGroupsWithDetails(userId: string): Promise<GroupsQueryResult> {
@@ -122,12 +122,25 @@ export async function getAllMyGroupsWithDetails(userId: string): Promise<GroupsQ
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const groups = data?.map((item: any) => ({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...(item.group as any),
-    user_role: item.role,
-    joined_at: item.joined_at,
-  }));
+  const groups = await Promise.all(data?.map(async (item: any) => {
+    const group = item.group as any;
+    const currentMemberCount = group.member_count?.[0]?.count || 0;
+
+    // Get pending invitations count for this group
+    const { count: pendingCount } = await supabase
+      .from('group_invitations')
+      .select('*', { count: 'exact', head: true })
+      .eq('group_id', group.id)
+      .eq('status', 'pending');
+
+    return {
+      ...group,
+      user_role: item.role,
+      joined_at: item.joined_at,
+      member_count: currentMemberCount,
+      pending_invitations_count: pendingCount || 0,
+    };
+  }) || []);
 
   return { data: groups as Group[], error: null };
 }

@@ -10,7 +10,8 @@ import { GroupCardCreditFlippable } from './GroupCardCreditFlippable'
 import { GroupCardCreditSkeleton } from './GroupCardCreditSkeleton'
 import { GroupExpensesSection } from './GroupExpensesSection'
 import { CreateGroupFormEnhanced, type CreateGroupFormData } from './CreateGroupFormEnhanced'
-import { CreditCard, Plus, Sparkles } from 'lucide-react'
+import { JoinGroupDialog } from './JoinGroupDialog'
+import { CreditCard, Plus, Sparkles, LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Drawer,
@@ -52,6 +53,7 @@ export function GroupsList() {
   const [error, setError] = useState<string | null>(null)
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [isJoinDrawerOpen, setIsJoinDrawerOpen] = useState(false)
   const [showCards, setShowCards] = useState(false) // For animation trigger
 
   useEffect(() => {
@@ -142,7 +144,8 @@ export function GroupsList() {
     // For now, create group without image
     const result = await createGroupAction({
       name: data.name,
-      description: data.description || null
+      description: data.description || null,
+      members: data.members
     })
 
     if (result.error) {
@@ -150,9 +153,6 @@ export function GroupsList() {
     }
 
     if (result.data) {
-      // TODO: Add members to group
-      // TODO: Send email invites to non-existing users
-
       // Add new group to list with complete data
       const newGroup: ExtendedGroup = {
         ...result.data,
@@ -180,6 +180,24 @@ export function GroupsList() {
   const handleGroupClick = (groupId: string) => {
     setActiveGroupId(groupId)
     setActiveGroupCookie(groupId)
+  }
+
+  const handleJoinSuccess = () => {
+    setIsJoinDrawerOpen(false)
+    // Refetch groups
+    if (userId) {
+      getMyGroupsClient(userId).then(({ data }) => {
+        if (data) {
+          setGroups(data)
+          // Set the newly joined group as active
+          if (data.length > 0) {
+            const newestGroup = data[0]
+            setActiveGroupId(newestGroup.id)
+            setActiveGroupCookie(newestGroup.id)
+          }
+        }
+      })
+    }
   }
 
   const activeGroup = groups.find(g => g.id === activeGroupId)
@@ -263,26 +281,50 @@ export function GroupsList() {
           </div>
 
           {/* CTA with drawer - snap points for expand */}
-          <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} snapPoints={[0.6, 1]} fadeFromIndex={1}>
-            <DrawerTrigger asChild>
-              <Button
-                size="lg"
-                className="h-14 px-8 text-lg bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg hover:shadow-xl transition-all"
-              >
-                <Plus className="w-6 h-6 mr-2" />
-                Create Your First Group
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="max-h-[96vh]">
-              <div className="mx-auto w-full max-w-2xl p-6 overflow-y-auto max-h-[88vh]">
-                <DrawerTitle className="text-2xl font-bold mb-6">Create New Group</DrawerTitle>
-                <CreateGroupFormEnhanced
-                  onSubmit={handleCreateGroup}
-                  onCancel={() => setIsDrawerOpen(false)}
-                />
-              </div>
-            </DrawerContent>
-          </Drawer>
+          <div className="flex gap-3 justify-center">
+            <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} snapPoints={[0.6, 1]} fadeFromIndex={1}>
+              <DrawerTrigger asChild>
+                <Button
+                  size="lg"
+                  className="h-14 px-8 text-lg bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg hover:shadow-xl transition-all"
+                >
+                  <Plus className="w-6 h-6 mr-2" />
+                  Create Your First Group
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent className="max-h-[96vh]">
+                <div className="mx-auto w-full max-w-2xl p-6 overflow-y-auto max-h-[88vh]">
+                  <DrawerTitle className="text-2xl font-bold mb-6">Create New Group</DrawerTitle>
+                  <CreateGroupFormEnhanced
+                    onSubmit={handleCreateGroup}
+                    onCancel={() => setIsDrawerOpen(false)}
+                  />
+                </div>
+              </DrawerContent>
+            </Drawer>
+
+            <Drawer open={isJoinDrawerOpen} onOpenChange={setIsJoinDrawerOpen}>
+              <DrawerTrigger asChild>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-14 px-8 text-lg border-2 hover:bg-purple-50"
+                >
+                  <LogIn className="w-6 h-6 mr-2" />
+                  Join a Group
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <div className="mx-auto w-full max-w-md p-6">
+                  <DrawerTitle className="text-2xl font-bold mb-6">Join a Group</DrawerTitle>
+                  <JoinGroupDialog
+                    onSuccess={handleJoinSuccess}
+                    onCancel={() => setIsJoinDrawerOpen(false)}
+                  />
+                </div>
+              </DrawerContent>
+            </Drawer>
+          </div>
 
           {/* Features list */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
@@ -321,6 +363,29 @@ export function GroupsList() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Join Group button with drawer */}
+          <Drawer open={isJoinDrawerOpen} onOpenChange={setIsJoinDrawerOpen}>
+            <DrawerTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-2 border-purple-200 hover:bg-purple-50 hover:border-purple-300"
+              >
+                <LogIn className="w-4 h-4" />
+                Join Group
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <div className="mx-auto w-full max-w-md p-6">
+                <DrawerTitle className="text-2xl font-bold mb-6">Join a Group</DrawerTitle>
+                <JoinGroupDialog
+                  onSuccess={handleJoinSuccess}
+                  onCancel={() => setIsJoinDrawerOpen(false)}
+                />
+              </div>
+            </DrawerContent>
+          </Drawer>
+
           {/* Create button with drawer - snap points for expand */}
           <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} snapPoints={[0.6, 1]} fadeFromIndex={1}>
             <DrawerTrigger asChild>

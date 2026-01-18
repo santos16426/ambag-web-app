@@ -33,6 +33,7 @@ export type Group = {
   // Optional joined data
   creator?: GroupCreator;
   member_count?: number;
+  pending_invitations_count?: number;
   user_role?: GroupRole;
   joined_at?: string;
   members?: GroupMember[];
