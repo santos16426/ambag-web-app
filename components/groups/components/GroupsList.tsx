@@ -29,7 +29,7 @@ type ExtendedGroup = Group & {
 };
 
 const ACTIVE_GROUP_COOKIE = 'active_group_id';
-const USE_MOCK_DATA = true; // Set to false to use real data from Supabase
+const USE_MOCK_DATA = false; // Set to false to use real data from Supabase
 
 // Helper functions for cookies
 function getActiveGroupFromCookie(): string | null {
@@ -53,7 +53,6 @@ export function GroupsList() {
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [showCards, setShowCards] = useState(false) // For animation trigger
-  const hasFetched = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -63,10 +62,6 @@ export function GroupsList() {
         setLoading(false)
         return
       }
-
-      // Prevent duplicate calls even in Strict Mode
-      if (hasFetched.current) return
-      hasFetched.current = true
 
       setLoading(true)
 
@@ -103,10 +98,14 @@ export function GroupsList() {
       // Ignore if component unmounted
       if (cancelled) return
 
+      console.log('🔍 Groups fetch result:', { data, error, userId })
+
       if (error) {
+        console.error('❌ Error fetching groups:', error)
         setError(error.message)
       } else {
         const groupsData = data || []
+        console.log('✅ Groups data:', groupsData)
         setGroups(groupsData)
 
         // Set active group: first check cookie, then use first group
@@ -116,8 +115,11 @@ export function GroupsList() {
             ? savedActiveId
             : groupsData[0].id
 
+          console.log('📌 Setting active group:', activeId)
           setActiveGroupId(activeId)
           setActiveGroupCookie(activeId)
+        } else {
+          console.log('⚠️ No groups found')
         }
       }
 
@@ -131,7 +133,6 @@ export function GroupsList() {
 
     // Cleanup function to prevent updates after unmount
     return () => {
-      setLoading(false)
       cancelled = true
     }
   }, [userId])

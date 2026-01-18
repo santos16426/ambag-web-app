@@ -28,11 +28,14 @@ export async function createGroupAction(data: {
   const { data: { user }, error: userError } = await supabase.auth.getUser()
 
   if (userError || !user) {
+    console.error('Auth error:', userError)
     return {
       data: null,
       error: { message: 'You must be logged in to create a group' }
     }
   }
+
+  console.log('Creating group for user:', user.id, user.email)
 
   // Validate input
   if (!data.name || data.name.trim().length === 0) {
@@ -51,6 +54,8 @@ export async function createGroupAction(data: {
 
   // Generate unique invite code
   const inviteCode = generateInviteCode()
+
+  console.log('Inserting group with created_by:', user.id)
 
   // Create the group
   const { data: group, error: groupError } = await supabase
@@ -74,34 +79,27 @@ export async function createGroupAction(data: {
     .single()
 
   if (groupError) {
-    console.error('Error creating group:', groupError)
+    console.error('Error creating group:', {
+      code: groupError.code,
+      message: groupError.message,
+      details: groupError.details,
+      hint: groupError.hint,
+      user_id: user.id
+    })
     return {
       data: null,
       error: { message: groupError.message || 'Failed to create group' }
     }
   }
 
-  // Add creator as admin
-  const { error: memberError } = await supabase
-    .from('group_members')
-    .insert({
-      group_id: group.id,
-      user_id: user.id,
-      role: 'admin'
-    })
+  console.log('Group created successfully:', group.id)
 
-  if (memberError) {
-    console.error('Error adding creator as admin:', memberError)
-    // Try to delete the group since we couldn't add the member
-    await supabase.from('groups').delete().eq('id', group.id)
-    return {
-      data: null,
-      error: { message: 'Failed to set up group membership' }
-    }
-  }
+  // Note: The creator is automatically added as admin via database trigger (on_group_created)
+  // No need to manually insert into group_members
 
   // Revalidate the dashboard page
   revalidatePath('/dashboard')
+  revalidatePath('/groups')
 
   return {
     data: group,

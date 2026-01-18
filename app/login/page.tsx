@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { loginAction } from "./actions";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -45,14 +46,17 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const supabase = createClient();
-
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Use server action for proper cookie handling
+      const result = await loginAction({
         email: formData.email,
         password: formData.password,
       });
 
-      if (error) throw error;
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+
+      // If we get here, redirect happened
 
     } catch (error) {
       console.error("Login error:", error);
@@ -63,7 +67,6 @@ export default function LoginPage() {
           ? "Invalid email or password"
           : errorMessage,
       );
-    } finally {
       setIsLoading(false);
     }
   };

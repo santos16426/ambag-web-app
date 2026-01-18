@@ -31,6 +31,13 @@ export default async function DashboardPage() {
   }
   const safeUser = user as SupabaseUser;
 
+  // Log user UUID for debugging
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📍 Dashboard - Current User:');
+  console.log('UUID:', user.id);
+  console.log('Email:', user.email);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
   const userData: UserType = toUserType(safeUser);
   return (
     <Layout userData={userData}>
