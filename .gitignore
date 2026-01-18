@@ -40,10 +40,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-
 client_secret_145932308728-nho5pkqsu7ai7rr7v838rslpbp0kvibk.apps.googleusercontent.com.json
 
-supabase/
+# Supabase migrations and config (at root level only)
+/supabase/
+# But allow lib/supabase (our code)
+!/lib/supabase/
 
 # Documentation
 AUTH_TESTING_GUIDE.md
