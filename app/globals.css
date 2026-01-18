@@ -401,3 +401,75 @@ p {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* 3D Card Flip Utilities */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  /* Shimmer animation for skeleton */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+
+  /* Slide in from right animation */
+  @keyframes slide-in-from-right {
+    0% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-in-from-right {
+    animation: slide-in-from-right 0.5s ease-out;
+  }
+
+  /* Custom Scrollbar */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-thumb-muted::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .scrollbar-thumb-muted::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thumb-muted::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.2);
+    border-radius: 9999px;
+  }
+
+  .scrollbar-thumb-muted:hover::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+  }
+}

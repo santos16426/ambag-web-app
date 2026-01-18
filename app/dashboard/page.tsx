@@ -1,10 +1,10 @@
 // app/dashboard/page.tsx
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Layout } from "@/components/layout/Layout";
+import { Layout } from "@/components/common/layout/Layout";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
-import type { UserType } from "@/lib/types";
-import { Content } from "@/components/dashboard/ContentWrapper";
+import type { UserType } from "@/types/user";
+import { Content } from "@/components/groups/components/ContentWrapper";
 
 function toUserType(u: SupabaseUser): UserType {
   return {

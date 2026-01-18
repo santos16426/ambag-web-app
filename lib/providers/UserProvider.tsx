@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useUserStore } from '@/lib/store/userStore'
-import type { UserType } from '@/lib/types'
+import type { UserType } from '@/types/user'
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const setUser = useUserStore((state) => state.setUser)

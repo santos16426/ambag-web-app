@@ -28,8 +28,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { UserType } from "@/lib/types"
-import LogoutButton from "@/components/auth/LogoutButton";
+import { UserType } from "@/types/user"
+import LogoutButton from "@/components/auth/components/LogoutButton";
 export function NavUser({
   avatar_url,
   full_name,
