@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Group } from "@/types/group";
 import { Users, DollarSign, Calendar, User, Share2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import { toast } from "sonner"
 interface GroupCardCreditFlippableProps {
   group: Group & { image_url?: string | null; total_expenses?: number };
   isActive: boolean;
@@ -40,7 +40,7 @@ export function GroupCardCreditFlippable({ group, isActive, onClick }: GroupCard
     if (group.invite_code) {
       navigator.clipboard.writeText(group.invite_code);
       // TODO: Add toast notification
-      alert(`Invite code copied: ${group.invite_code}`);
+      toast(`Invite code copied: ${group.invite_code}`);
     }
   };
 
@@ -88,11 +88,15 @@ export function GroupCardCreditFlippable({ group, isActive, onClick }: GroupCard
               </div>
             </div>
 
-            <div className="space-y-2">
-              <div>
-                <h3 className="text-base font-bold tracking-wide drop-shadow-lg truncate">
+            <div className="space-y-2 grow flex flex-col">
+              <div className="grow flex flex-col items-start justify-end" >
+                <p className="text-base font-bold tracking-wide drop-shadow-lg truncate">
                   {group.name}
-                </h3>
+                </p>
+                <p>
+                  hotdog
+                  {group.description}
+                </p>
               </div>
 
               <div className="flex items-center justify-between text-xs">

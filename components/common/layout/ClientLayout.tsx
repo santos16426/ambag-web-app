@@ -10,6 +10,7 @@ import { AppSidebar } from "../navigation/AppSidebar"
 import { UserProvider } from "@/lib/providers/UserProvider"
 import { useUserStore } from "@/lib/store/userStore"
 import type { UserType } from "@/types/user";
+import { Toaster } from "@/components/ui/sonner"
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -46,6 +47,7 @@ export function ClientLayout({ userData, children, defaultOpen, defaultActiveMen
           </main>
         </SidebarInset>
       </SidebarProvider>
+      <Toaster />
     </UserProvider>
   )
 }
