@@ -12,7 +12,7 @@ import type {
 } from "@/types/group";
 
 /**
- * Fetch groups for client components
+ * Fetch groups for client components (includes pending invitations in member count)
  * Use in Client Components with 'use client'
  */
 export async function getMyGroupsClient(userId: string): Promise<GroupsQueryResult> {
@@ -51,19 +51,34 @@ export async function getMyGroupsClient(userId: string): Promise<GroupsQueryResu
     return { data: [], error: null };
   }
 
-  const groups = (data as GroupMemberRecord[]).map((item) => {
+  const groups = await Promise.all((data as GroupMemberRecord[]).map(async (item) => {
     // In Supabase, the group key might be an array even if only one object is returned.
     const group =
       Array.isArray(item.group) && item.group.length > 0
         ? item.group[0]
         : item.group;
 
+    // Get current member count
+    const { count: memberCount } = await supabase
+      .from('group_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('group_id', (group as SupabaseGroup).id);
+
+    // Get pending invitations count
+    const { count: pendingCount } = await supabase
+      .from('group_invitations')
+      .select('*', { count: 'exact', head: true })
+      .eq('group_id', (group as SupabaseGroup).id)
+      .eq('status', 'pending');
+
     return {
       ...(group as SupabaseGroup),
       user_role: item.role,
       joined_at: item.joined_at,
+      member_count: memberCount || 0,
+      pending_invitations_count: pendingCount || 0,
     };
-  });
+  }));
 
   return { data: groups as Group[], error: null };
 }
