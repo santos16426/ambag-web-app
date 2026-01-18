@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Zustand Group Store** - centralized state management for groups, active group, and members using Zustand
+- **AlertDialog Component** - shadcn/ui alert dialog component for confirmation dialogs
+- **Member Card UI** - redesigned member cards with horizontal chip style, hover tilt effects, and status badges
+- **Owner Crown Icon** - golden crown icon displayed on group owner's avatar
+- **Remove Pending Invitations** - admins can cancel pending invitations with confirmation dialog
+- **Toast Notifications** - informative toast messages for accept/reject actions with user names
+- **Skeleton Loading States** - loading skeletons for member list during data fetch
+- **Slide-in Animations** - smooth slide-in animations for member cards after loading
 - **Group Members Management** - comprehensive member management UI with add, remove, and view capabilities
 - **GroupMembersList Component** - displays all group members with roles, avatars, and join dates
 - **Add Members Feature** - admins can add new members by email (existing users or send invitations)
@@ -39,6 +47,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Groups Component** - removed hasFetched ref to allow proper re-fetching on navigation
 - **Login Flow** - switched from client-side to server-side authentication for reliable cookie persistence
+- **Member List UI** - redesigned from full-width list to horizontal chip cards with hover effects
+- **Member Status Display** - moved status badges below email, added "You" badge next to name
+- **Group Card Member Count** - now excludes pending invitations and join requests from total count
+- **Default Sidebar State** - sidebar now defaults to open with "Overview" as active menu
+- **Pending Visibility** - all members can now see pending invitations and join requests (not just admins)
+- **Accept/Reject UI** - replaced browser alerts with shadcn AlertDialog components
+- **State Management** - migrated from prop drilling to Zustand store for group and member state
 
 ### Fixed
 - **Group Members Visibility** - fixed RLS policy preventing members from seeing other members in the same group
@@ -53,6 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Infinite Recursion** - prevented recursive policy checks in group_members table
 - **Group Display** - fixed groups not persisting when navigating between pages
 - **Cookie Management** - ensured supabase session cookies are properly set and maintained
+- **Member List Resetting** - fixed members list clearing unnecessarily when switching groups
+- **Conditional Hook Calls** - moved hooks before early returns to fix React hooks rules violations
 
 ### Security
 - **RLS Enforcement** - all tables now protected with row-level security policies

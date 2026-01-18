@@ -6,12 +6,17 @@ import { getMyGroupsClient } from '@/lib/supabase/queries/client'
 import { createGroupAction } from '@/hooks/groups'
 import type { Group } from '@/types/group'
 import { useUserId, useUser } from '@/lib/store/userStore'
+import {
+  useGroupStore,
+  useGroups,
+  useActiveGroupId,
+  useGroupsLoading,
+  useGroupsError,
+} from '@/lib/store/groupStore'
 import { GroupCardCreditFlippable } from './GroupCardCreditFlippable'
 import { GroupCardCreditSkeleton } from './GroupCardCreditSkeleton'
-import { GroupExpensesSection } from './GroupExpensesSection'
 import { CreateGroupFormEnhanced, type CreateGroupFormData } from './CreateGroupFormEnhanced'
 import { JoinGroupDialog } from './JoinGroupDialog'
-import { GroupMembersList } from './GroupMembersList'
 import { CreditCard, Plus, Sparkles, LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,29 +35,22 @@ type ExtendedGroup = Group & {
   total_expenses?: number
 };
 
-const ACTIVE_GROUP_COOKIE = 'active_group_id';
 const USE_MOCK_DATA = false; // Set to false to use real data from Supabase
-
-// Helper functions for cookies
-function getActiveGroupFromCookie(): string | null {
-  if (typeof document === 'undefined') return null;
-  const cookies = document.cookie.split('; ');
-  const cookie = cookies.find(c => c.startsWith(`${ACTIVE_GROUP_COOKIE}=`));
-  return cookie ? cookie.split('=')[1] : null;
-}
-
-function setActiveGroupCookie(groupId: string) {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${ACTIVE_GROUP_COOKIE}=${groupId}; path=/; max-age=${60 * 60 * 24 * 365}`; // 1 year
-}
 
 export function GroupsList() {
   const userId = useUserId()
   const user = useUser()
-  const [groups, setGroups] = useState<ExtendedGroup[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [activeGroupId, setActiveGroupId] = useState<string | null>(null)
+  const groups = useGroups()
+  const loading = useGroupsLoading()
+  const error = useGroupsError()
+  const activeGroupId = useActiveGroupId()
+  const {
+    setGroups,
+    setActiveGroupId,
+    addGroup,
+    setLoading,
+    setError,
+  } = useGroupStore()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isJoinDrawerOpen, setIsJoinDrawerOpen] = useState(false)
   const [showCards, setShowCards] = useState(false) // For animation trigger
@@ -75,17 +73,17 @@ export function GroupsList() {
 
         if (cancelled) return
 
-        setGroups(mockGroups as ExtendedGroup[])
+        const mockGroupsData = mockGroups as ExtendedGroup[]
+        setGroups(mockGroupsData)
 
         // Set active group
-        if (mockGroups.length > 0) {
-          const savedActiveId = getActiveGroupFromCookie()
-          const activeId = savedActiveId && mockGroups.find(g => g.id === savedActiveId)
+        if (mockGroupsData.length > 0) {
+          const savedActiveId = useGroupStore.getState().activeGroupId
+          const activeId = savedActiveId && mockGroupsData.find(g => g.id === savedActiveId)
             ? savedActiveId
-            : mockGroups[0].id
+            : mockGroupsData[0].id
 
-        setActiveGroupId(activeId)
-          setActiveGroupCookie(activeId)
+          setActiveGroupId(activeId)
         }
 
         setLoading(false)
@@ -107,15 +105,14 @@ export function GroupsList() {
         const groupsData = data || []
         setGroups(groupsData)
 
-        // Set active group: first check cookie, then use first group
+        // Set active group: first check store, then use first group
         if (groupsData.length > 0) {
-          const savedActiveId = getActiveGroupFromCookie()
+          const savedActiveId = useGroupStore.getState().activeGroupId
           const activeId = savedActiveId && groupsData.find(g => g.id === savedActiveId)
             ? savedActiveId
             : groupsData[0].id
 
           setActiveGroupId(activeId)
-          setActiveGroupCookie(activeId)
         } else {
           console.log('⚠️ No groups found')
         }
@@ -133,7 +130,7 @@ export function GroupsList() {
     return () => {
       cancelled = true
     }
-  }, [userId])
+  }, [userId, setGroups, setActiveGroupId, setLoading, setError])
 
   const handleCreateGroup = async (data: CreateGroupFormData) => {
     // TODO: Upload image to Supabase Storage first if present
@@ -163,11 +160,10 @@ export function GroupsList() {
         }
       }
 
-      setGroups(prev => [newGroup, ...prev])
+      addGroup(newGroup)
 
       // Set as active group
       setActiveGroupId(newGroup.id)
-      setActiveGroupCookie(newGroup.id)
 
       setIsDrawerOpen(false)
     }
@@ -175,7 +171,6 @@ export function GroupsList() {
 
   const handleGroupClick = (groupId: string) => {
     setActiveGroupId(groupId)
-    setActiveGroupCookie(groupId)
   }
 
   const handleJoinSuccess = () => {
@@ -189,14 +184,11 @@ export function GroupsList() {
           if (data.length > 0) {
             const newestGroup = data[0]
             setActiveGroupId(newestGroup.id)
-            setActiveGroupCookie(newestGroup.id)
           }
         }
       })
     }
   }
-
-  const activeGroup = groups.find(g => g.id === activeGroupId)
 
   if (!userId) {
     return (
@@ -419,34 +411,6 @@ export function GroupsList() {
           ))}
         </div>
       </div>
-      {/* Members section for active group */}
-      {activeGroup && (
-        <GroupMembersList
-          groupId={activeGroup.id}
-          userRole={activeGroup.user_role}
-          isCreator={activeGroup.created_by === userId}
-          onMemberChange={async () => {
-            // Refetch groups to update member counts on cards
-            if (userId) {
-              const { data } = await getMyGroupsClient(userId);
-              if (data) {
-                setGroups(data);
-                // Keep the same active group selected
-                const updatedActiveGroup = data.find(g => g.id === activeGroupId);
-                if (updatedActiveGroup) {
-                  setActiveGroupId(updatedActiveGroup.id);
-                }
-              }
-            }
-          }}
-        />
-      )}
-      {/* Expenses section for active group */}
-      {activeGroup && (
-        <GroupExpensesSection groupName={activeGroup.name} />
-      )}
-
-
     </div>
   )
 }
