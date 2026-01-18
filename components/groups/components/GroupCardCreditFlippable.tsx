@@ -16,7 +16,6 @@ export function GroupCardCreditFlippable({ group, isActive, onClick }: GroupCard
   const firstChar = group.name.charAt(0).toUpperCase();
   const memberCount = group.member_count || 0;
   const pendingInvitationsCount = group.pending_invitations_count || 0;
-  const totalMemberCount = memberCount + pendingInvitationsCount;
   const totalExpenses = group.total_expenses || 0;
 
   // Generate gradient if no image
@@ -95,16 +94,17 @@ export function GroupCardCreditFlippable({ group, isActive, onClick }: GroupCard
                 <p className="text-base font-bold tracking-wide drop-shadow-lg truncate">
                   {group.name}
                 </p>
-                <p>
-                  hotdog
-                  {group.description}
-                </p>
+                {group.description && (
+                  <p className="text-xs opacity-90 truncate">
+                    {group.description}
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full">
                   <Users className="w-3 h-3" />
-                  <span className="font-medium">{totalMemberCount}</span>
+                  <span className="font-medium">{memberCount}</span>
                   {pendingInvitationsCount > 0 && (
                     <span className="text-[10px] opacity-75">
                       (+{pendingInvitationsCount} pending)
@@ -143,7 +143,7 @@ export function GroupCardCreditFlippable({ group, isActive, onClick }: GroupCard
               {/* Total Members */}
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center col-span-2">
                 <p className="text-[9px] opacity-75 mb-0.5">Members</p>
-                <p className="text-lg font-bold">{totalMemberCount}</p>
+                <p className="text-lg font-bold">{memberCount}</p>
                 {pendingInvitationsCount > 0 && (
                   <div className="flex items-center justify-center gap-0.5 mt-0.5">
                     <UserPlus className="w-2.5 h-2.5 text-yellow-400" />

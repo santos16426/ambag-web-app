@@ -2,12 +2,15 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Receipt, TrendingUp } from "lucide-react";
+import { useActiveGroup } from "@/lib/store/groupStore";
 
-interface GroupExpensesSectionProps {
-  groupName: string;
-}
+export function GroupExpensesSection() {
+  const activeGroup = useActiveGroup();
 
-export function GroupExpensesSection({ groupName }: GroupExpensesSectionProps) {
+  // Don't render if no active group
+  if (!activeGroup) {
+    return null;
+  }
   return (
     <div className="space-y-6 pt-8 border-t border-border">
       {/* Header */}
@@ -15,7 +18,7 @@ export function GroupExpensesSection({ groupName }: GroupExpensesSectionProps) {
         <div className="space-y-1">
           <h3 className="text-2xl font-bold">Expenses</h3>
           <p className="text-sm text-muted-foreground">
-            Showing expenses for <span className="font-medium text-foreground">{groupName}</span>
+            Showing expenses for <span className="font-medium text-foreground">{activeGroup.name}</span>
           </p>
         </div>
         <Skeleton className="h-10 w-32" />

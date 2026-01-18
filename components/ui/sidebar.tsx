@@ -81,6 +81,19 @@ function SidebarProvider({
   // Initialize activeMenu with server-provided default to prevent hydration mismatch
   const [_activeMenu, _setActiveMenu] = React.useState<string | null>(defaultActiveMenu)
 
+  // Save default active menu to cookie on initial load if no cookie exists
+  React.useEffect(() => {
+    if (defaultActiveMenu && typeof document !== 'undefined') {
+      const existingCookie = document.cookie
+        .split('; ')
+        .find(c => c.startsWith(`${SIDEBAR_ACTIVE_MENU_COOKIE_NAME}=`))
+      // Only set cookie if it doesn't exist and we have a default
+      if (!existingCookie && defaultActiveMenu) {
+        document.cookie = `${SIDEBAR_ACTIVE_MENU_COOKIE_NAME}=${defaultActiveMenu}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+      }
+    }
+  }, [defaultActiveMenu]) // Run when defaultActiveMenu changes
+
   const open = openProp ?? _open
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {

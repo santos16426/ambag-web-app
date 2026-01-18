@@ -666,3 +666,85 @@ export async function removeGroupMemberAction(groupId: string, memberId: string)
     error: null
   }
 }
+
+/**
+ * Cancel/remove a pending invitation
+ */
+export async function cancelGroupInvitationAction(invitationId: string) {
+  const supabase = await createClient()
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return {
+      data: null,
+      error: { message: 'You must be logged in' }
+    }
+  }
+
+  // Get the invitation to check permissions
+  const { data: invitation, error: invitationError } = await supabase
+    .from('group_invitations')
+    .select('id, group_id, email')
+    .eq('id', invitationId)
+    .single()
+
+  if (invitationError || !invitation) {
+    return {
+      data: null,
+      error: { message: 'Invitation not found' }
+    }
+  }
+
+  // Check if user is admin or creator
+  const { data: group } = await supabase
+    .from('groups')
+    .select('id, created_by')
+    .eq('id', invitation.group_id)
+    .single()
+
+  if (!group) {
+    return {
+      data: null,
+      error: { message: 'Group not found' }
+    }
+  }
+
+  const { data: membership } = await supabase
+    .from('group_members')
+    .select('role')
+    .eq('group_id', invitation.group_id)
+    .eq('user_id', user.id)
+    .single()
+
+  const isAdmin = membership?.role === 'admin' || group.created_by === user.id
+
+  if (!isAdmin) {
+    return {
+      data: null,
+      error: { message: 'Only admins can cancel invitations' }
+    }
+  }
+
+  // Delete the invitation
+  const { error: deleteError } = await supabase
+    .from('group_invitations')
+    .delete()
+    .eq('id', invitationId)
+
+  if (deleteError) {
+    return {
+      data: null,
+      error: { message: deleteError.message || 'Failed to cancel invitation' }
+    }
+  }
+
+  revalidatePath('/groups')
+  revalidatePath('/dashboard')
+
+  return {
+    data: { success: true },
+    error: null
+  }
+}

@@ -23,7 +23,7 @@ import Link from "next/link"
 const data = {
   navMain: [
     {
-      title: "Dashboard",
+      title: "Overview",
       url: "#",
       icon: IconDashboard,
     },

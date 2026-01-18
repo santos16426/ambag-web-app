@@ -10,8 +10,11 @@ type LayoutProps = PropsWithChildren<{
 
 export async function Layout({ userData, children }: LayoutProps) {
   const cookieStore = await cookies()
-  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
-  const defaultActiveMenu = cookieStore.get("sidebar_active_menu")?.value || null
+  const sidebarStateCookie = cookieStore.get("sidebar_state")
+  // Default to open (true) if no cookie exists, otherwise use cookie value
+  const defaultOpen = sidebarStateCookie === undefined ? true : sidebarStateCookie.value === "true"
+  // Default to "Overview" if no cookie exists
+  const defaultActiveMenu = cookieStore.get("sidebar_active_menu")?.value || "Overview"
 
   return (
     <ClientLayout userData={userData} defaultOpen={defaultOpen} defaultActiveMenu={defaultActiveMenu}>

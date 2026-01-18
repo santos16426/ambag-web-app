@@ -344,8 +344,8 @@ export default async function Home() {
                     >
                       <path
                         d='M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z'
-                        clip-rule='evenodd'
-                        fill-rule='evenodd'
+                        clipRule='evenodd'
+                        fillRule='evenodd'
                       ></path>
                     </svg>
                     Unlimited group members
@@ -389,8 +389,8 @@ export default async function Home() {
                     >
                       <path
                         d='M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z'
-                        clip-rule='evenodd'
-                        fill-rule='evenodd'
+                        clipRule='evenodd'
+                        fillRule='evenodd'
                       ></path>
                     </svg>
                     Everything in Free
@@ -405,8 +405,8 @@ export default async function Home() {
                     >
                       <path
                         d='M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z'
-                        clip-rule='evenodd'
-                        fill-rule='evenodd'
+                        clipRule='evenodd'
+                        fillRule='evenodd'
                       ></path>
                     </svg>
                     Unlimited members
@@ -421,8 +421,8 @@ export default async function Home() {
                     >
                       <path
                         d='M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z'
-                        clip-rule='evenodd'
-                        fill-rule='evenodd'
+                        clipRule='evenodd'
+                        fillRule='evenodd'
                       ></path>
                     </svg>
                     Advanced splitting options
@@ -437,8 +437,8 @@ export default async function Home() {
                     >
                       <path
                         d='M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z'
-                        clip-rule='evenodd'
-                        fill-rule='evenodd'
+                        clipRule='evenodd'
+                        fillRule='evenodd'
                       ></path>
                     </svg>
                     Receipt scanning
