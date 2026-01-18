@@ -46,7 +46,7 @@ export function GroupExpensesSection({ groupName }: GroupExpensesSectionProps) {
       <div className="space-y-3">
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors">
-            <Skeleton className="w-12 h-12 rounded-full flex-shrink-0" />
+            <Skeleton className="w-12 h-12 rounded-full shrink-0" />
             <div className="flex-1 space-y-2">
               <div className="flex items-center justify-between">
                 <Skeleton className="h-5 w-32" />

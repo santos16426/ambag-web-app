@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { LogIn, Loader2, CheckCircle2, Clock } from "lucide-react";
+import { LogIn, Loader2, Clock } from "lucide-react";
 import { joinGroupByInviteCodeAction } from "@/hooks/groups";
 import { toast } from "sonner";
 
@@ -30,10 +30,7 @@ export function JoinGroupDialog({ onSuccess, onCancel }: JoinGroupDialogProps) {
     setIsSubmitting(true);
 
     try {
-      console.log('🚀 Attempting to join with code:', inviteCode.trim().toUpperCase());
       const result = await joinGroupByInviteCodeAction(inviteCode);
-
-      console.log('📥 Join result:', result);
 
       if (result.error) {
         setError(result.error.message);
@@ -69,8 +66,8 @@ export function JoinGroupDialog({ onSuccess, onCancel }: JoinGroupDialogProps) {
         <ul className="text-sm text-muted-foreground space-y-1">
           <li>• Get an invite code from a group member</li>
           <li>• Enter the code below and submit</li>
-          <li>• If you were invited, you'll join instantly</li>
-          <li>• Otherwise, you'll need approval from the group admin</li>
+          <li>• If you were invited, you&apos;ll join instantly</li>
+          <li>• Otherwise, you&apos;ll need approval from the group admin</li>
         </ul>
       </div>
 

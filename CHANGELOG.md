@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Group Members Management** - comprehensive member management UI with add, remove, and view capabilities
+- **GroupMembersList Component** - displays all group members with roles, avatars, and join dates
+- **Add Members Feature** - admins can add new members by email (existing users or send invitations)
+- **Accept/Reject Join Requests** - admins can approve or reject pending join requests from the members list
+- **Remove Members Feature** - admins can remove members while preserving their expense history
+- **Member Management Server Actions** - server actions for adding, removing, accepting, and rejecting members
+- **Group Members Queries** - client-side queries for fetching members, join requests, and pending invitations
+- **Member Count Auto-Update** - group card member counts automatically refresh when members are added or removed
+- **RLS Helper Function** - security definer function to check group membership without circular dependencies
+- **Database Migration 009** - fixes RLS policy to allow members to see other members in their groups
 - **Join Group by Invite Code** - users can now join groups using an 8-character invite code
 - **Smart Join Logic** - automatically approve if user was invited, otherwise require admin approval
 - **Join Requests System** - new `group_join_requests` table to track pending join requests
@@ -31,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Login Flow** - switched from client-side to server-side authentication for reliable cookie persistence
 
 ### Fixed
+- **Group Members Visibility** - fixed RLS policy preventing members from seeing other members in the same group
+- **Member Count Not Updating** - group cards now refresh member counts when members are added or removed
+- **Circular RLS Dependency** - resolved circular dependency in group_members RLS policy using security definer function
 - **Invalid Invite Code Error** - fixed RLS policy blocking invite code lookup by allowing authenticated users to read groups with invite codes
 - **Failed to Create Join Request** - simplified RLS policy for join requests to avoid circular reference issues
 - **Missing Groups After Signup** - users invited to groups now automatically see those groups after creating an account
