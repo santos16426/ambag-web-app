@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Expense Balance Calculation** - utility functions to calculate balances between group members (who owes whom)
+- **Balance Summary Card** - unified card showing "You Owe" and "You're Owed" with complete member breakdowns
+- **Expense Editing** - click any expense card to edit inline using the same form component
+- **List View Toggle** - switch between card grid view and compact list view for expenses
+- **Auto-Scroll to Form** - automatically scrolls to expense form when adding or editing
+- **Stacked Participant Avatars** - visual representation of expense participants with stacked avatars
+- **Expense Form Reusability** - renamed CreateExpenseForm to ExpenseForm for use in both create and edit modes
+- **Payment Tracking** - update participant payment status with notifications to group members
+- **Expense Detail Drawer** - detailed view of expenses with payment tracking per participant
+- **RLS Policy Updates** - migration 010 allows any group member to update/delete expenses and update participant payments
 - **Expense Form UI** - comprehensive expense creation form with two-part layout (expense details and split options)
 - **Multi-Currency Support** - currency selector with 10 currencies (PHP, USD, JPY, KRW, EUR, GBP, CNY, AUD, CAD, SGD) and formatted input display
 - **Expense Split Options** - five split types: equally, exact amount, percentage, shares, and adjustment with auto-calculation
@@ -61,7 +71,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Auth Helper Functions** - utilities for debugging supabase authentication and session state
 
 ### Changed
+- **Expense Form Component** - renamed from CreateExpenseForm to ExpenseForm for better reusability
+- **Expense Card Layout** - redesigned to compact card view with grid layout (1/2/3 columns responsive)
+- **Expense List Layout** - form now appears below expenses list for better UX flow
+- **Balance Summary UI** - combined two separate cards into one unified balance summary card
+- **Expense Card Interaction** - removed dropdown menu, entire card is now clickable to edit
+- **Selected Members Initialization** - fixed to only select actual participants when editing expenses
 - **Expense Form Layout** - redesigned to minimal, modern two-part form with seamless border between sections
+- **Split Options Layout** - restored original layout with split types in horizontal row and members list below in vertical stack, with inline inputs for each member
 - **Expense Form UI** - removed labels, headers, and card containers for cleaner look, added informational notes
 - **Date Format** - changed to "Month dd, YYYY" format with calendar icon
 - **Notes Field** - renamed to "Remarks" with updated placeholder text
@@ -84,6 +101,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **State Management** - migrated from prop drilling to Zustand store for group and member state
 
 ### Fixed
+- **Expense Editing Selected Members** - fixed issue where all members were selected instead of only participants when editing
+- **Hydration Mismatch** - fixed date formatting to prevent server/client rendering differences
+- **TypeScript Errors** - fixed missing variable references and type issues in ExpenseForm
+- **Balance Calculation** - properly handles multiple members owing and being owed amounts
 - **TypeScript Errors** - fixed type mismatches for Supabase join queries (user and payer fields can be arrays)
 - **Group Members Data Transformation** - properly transform Supabase join results to match GroupMember type
 - **Expense Participants Data Transformation** - properly transform Supabase join results to match ExpenseParticipant type
