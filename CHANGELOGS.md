@@ -4,6 +4,11 @@
 
 ### Added
 
+- **Centralized Types** - moved all typescript type definitions to root `types/` folder for better organization
+- **Feature-Based Components** - reorganized components into feature-based structure (`components/groups/`, `components/auth/`)
+- **Infrastructure Providers** - moved react context providers to `lib/providers/` alongside other infrastructure
+- **Documentation Folder** - created `md/` folder for all markdown documentation files (except README and CHANGELOGS)
+- **Barrel Exports** - added index.ts files for clean feature exports
 - **Login/Signup Page** - Login and Signup Page for OAuth users
 - **Google OAuth User Sync** - Automatic user profile creation on Google login
 - **Landing Page Redesign** - Complete landing page redesign with receipt-style theme and bill aesthetic
@@ -27,6 +32,23 @@
 - **Supabase Queries** - Split queries into client-side and server-side implementations
 
 ### Changed
+
+- **Project Structure** - restructured entire codebase with clear separation of concerns
+- **Component Organization** - moved feature components from `/components/dashboard/` to `/components/groups/components/`
+- **Type Imports** - updated all type imports to use centralized `/types/` folder
+- **Provider Location** - relocated UserProvider from components to infrastructure (`lib/providers/`)
+- **Query Location** - moved database queries to `lib/supabase/queries/` for better organization
+- **Mock Data Location** - centralized mock data in `lib/mocks/` folder
+- **Server Actions Location** - organized server actions in `hooks/` folder
+- **Documentation Organization** - moved all documentation files to `md/` folder for cleaner root directory
+
+### Removed
+
+- **Duplicate Type Definitions** - removed type files from feature folders after centralization
+- **Old Component Folders** - cleaned up legacy component structure (`components/dashboard/`, `components/layout/`, etc)
+- **Test Pages** - removed obsolete test-groups page
+- **Unused Components** - deleted unused GroupCardCredit and CreateGroupForm components
+- **Legacy Import Paths** - removed outdated import references throughout codebase
 
 - **Dashboard Layout** - Refactored dashboard to use new sidebar layout instead of header
 - **Tailwind Config** - Updated to tailwind v4 with custom theme variables and css layers

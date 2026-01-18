@@ -1,7 +1,7 @@
 // User Store - Global state management for authenticated user
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { UserType } from '@/lib/types';
+import type { UserType } from '@/types/user';
 
 interface UserState {
   user: UserType | null;

@@ -5,19 +5,20 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
-import { SiteHeader } from "@/components/Sidebar/SiteHeader"
-import { AppSidebar } from "@/components/Sidebar/AppSidebar"
-import { UserProvider } from "@/components/providers/UserProvider"
+import { SiteHeader } from "../navigation/SiteHeader"
+import { AppSidebar } from "../navigation/AppSidebar"
+import { UserProvider } from "@/lib/providers/UserProvider"
 import { useUserStore } from "@/lib/store/userStore"
-import type { UserType } from "@/lib/types";
+import type { UserType } from "@/types/user";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
   userData: UserType;
   defaultOpen?: boolean;
+  defaultActiveMenu?: string | null;
 }
 
-export function ClientLayout({ userData, children, defaultOpen }: ClientLayoutProps) {
+export function ClientLayout({ userData, children, defaultOpen, defaultActiveMenu }: ClientLayoutProps) {
   const setUser = useUserStore((state) => state.setUser)
 
   // Initialize user in store on mount
@@ -35,9 +36,10 @@ export function ClientLayout({ userData, children, defaultOpen }: ClientLayoutPr
           } as React.CSSProperties
         }
         defaultOpen={defaultOpen}
+        defaultActiveMenu={defaultActiveMenu}
       >
         <AppSidebar {...userData} variant="inset"/>
-        <SidebarInset>
+        <SidebarInset className="overflow-x-hidden">
           <SiteHeader/>
           <main className="p-4">
             {children}

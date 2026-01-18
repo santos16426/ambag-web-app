@@ -58,6 +58,7 @@ function useSidebar() {
 
 function SidebarProvider({
   defaultOpen = true,
+  defaultActiveMenu = null,
   open: openProp,
   onOpenChange: setOpenProp,
   className,
@@ -66,6 +67,7 @@ function SidebarProvider({
   ...props
 }: React.ComponentProps<"div"> & {
   defaultOpen?: boolean
+  defaultActiveMenu?: string | null
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }) {
@@ -75,20 +77,9 @@ function SidebarProvider({
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen)
-  const [_activeMenu, _setActiveMenu] = React.useState<string | null>(null)
-  const [isHydrated, setIsHydrated] = React.useState(false)
 
-  // Read cookie only on client after hydration
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const cookies = document.cookie.split('; ')
-      const activeMenuCookie = cookies.find(c => c.startsWith(`${SIDEBAR_ACTIVE_MENU_COOKIE_NAME}=`))
-      if (activeMenuCookie) {
-        _setActiveMenu(activeMenuCookie.split('=')[1])
-      }
-      setIsHydrated(true)
-    }
-  }, [])
+  // Initialize activeMenu with server-provided default to prevent hydration mismatch
+  const [_activeMenu, _setActiveMenu] = React.useState<string | null>(defaultActiveMenu)
 
   const open = openProp ?? _open
   const setOpen = React.useCallback(

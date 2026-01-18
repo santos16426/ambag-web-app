@@ -27,6 +27,7 @@ export type Group = {
   description: string | null;
   created_by: string;
   invite_code: string | null;
+  image_url?: string | null;
   created_at: string;
   updated_at: string;
   // Optional joined data
@@ -35,6 +36,7 @@ export type Group = {
   user_role?: GroupRole;
   joined_at?: string;
   members?: GroupMember[];
+  total_expenses?: number;
 };
 
 // Supabase return types (internal use)
@@ -44,6 +46,7 @@ export type SupabaseGroup = {
   description: string | null;
   created_by: string;
   invite_code: string | null;
+  image_url?: string | null;
   created_at: string;
   updated_at: string;
   creator?: GroupCreator | GroupCreator[];

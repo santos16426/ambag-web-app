@@ -6,8 +6,8 @@ import {
   IconScissors ,
 } from "@tabler/icons-react"
 
-import { NavMain } from "@/components/Sidebar/NavMain"
-import { NavUser } from "@/components/Sidebar/NavUser"
+import { NavMain } from "./NavMain"
+import { NavUser } from "./NavUser"
 import {
   Sidebar,
   SidebarContent,
@@ -17,7 +17,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { UserType } from "@/lib/types"
+import { UserType } from "@/types/user"
 import Link from "next/link"
 
 const data = {
