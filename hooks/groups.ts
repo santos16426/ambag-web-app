@@ -33,8 +33,6 @@ export async function debugGetAllInviteCodes() {
     .from('groups')
     .select('id, name, invite_code')
     .not('invite_code', 'is', null)
-
-  console.log('📋 All groups with invite codes:', data)
   return { data, error }
 }
 
@@ -67,16 +65,12 @@ export async function joinGroupByInviteCodeAction(inviteCode: string) {
 
   const normalizedCode = inviteCode.trim().toUpperCase()
 
-  console.log('🔍 Searching for group with invite code:', normalizedCode)
-
   // Find group by invite code (case-insensitive search)
   const { data: group, error: groupError } = await supabase
     .from('groups')
     .select('id, name, created_by, invite_code')
     .ilike('invite_code', normalizedCode)
     .single()
-
-  console.log('📊 Group search result:', { group, error: groupError })
 
   if (groupError || !group) {
     console.error('Group not found:', {
@@ -157,9 +151,6 @@ export async function joinGroupByInviteCodeAction(inviteCode: string) {
     }
   }
 
-  // No pending invitation - create join request for admin approval
-  console.log('📝 Creating join request for user:', user.id, 'to group:', group.id)
-
   const { data: joinRequest, error: requestError } = await supabase
     .from('group_join_requests')
     .insert({
@@ -169,8 +160,6 @@ export async function joinGroupByInviteCodeAction(inviteCode: string) {
     })
     .select()
     .single()
-
-  console.log('📥 Join request result:', { joinRequest, error: requestError })
 
   if (requestError) {
     console.error('Error creating join request:', {
@@ -202,8 +191,6 @@ export async function joinGroupByInviteCodeAction(inviteCode: string) {
     }
   }
 
-  console.log('✅ Join request created successfully:', joinRequest.id)
-
   return {
     data: { group, autoApproved: false, joinRequest },
     error: null
@@ -230,9 +217,6 @@ export async function createGroupAction(data: {
       error: { message: 'You must be logged in to create a group' }
     }
   }
-
-  console.log('Creating group for user:', user.id, user.email)
-
   // Validate input
   if (!data.name || data.name.trim().length === 0) {
     return {
@@ -250,8 +234,6 @@ export async function createGroupAction(data: {
 
   // Generate unique invite code
   const inviteCode = generateInviteCode()
-
-  console.log('Inserting group with created_by:', user.id)
 
   // Create the group
   const { data: group, error: groupError } = await supabase
@@ -287,10 +269,6 @@ export async function createGroupAction(data: {
       error: { message: groupError.message || 'Failed to create group' }
     }
   }
-
-  console.log('Group created successfully:', group.id)
-
-  // Note: The creator is automatically added as admin via database trigger (on_group_created)
 
   // Add members if any
   if (data.members && data.members.length > 0) {
@@ -364,6 +342,327 @@ export async function createGroupAction(data: {
 
   return {
     data: group,
+    error: null
+  }
+}
+
+/**
+ * Add a member to a group (existing user or send invitation)
+ */
+export async function addGroupMemberAction(
+  groupId: string,
+  member: MemberToAdd
+) {
+  const supabase = await createClient()
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return {
+      data: null,
+      error: { message: 'You must be logged in' }
+    }
+  }
+
+  // Check if user is admin or creator
+  const { data: group } = await supabase
+    .from('groups')
+    .select('id, name, created_by, invite_code')
+    .eq('id', groupId)
+    .single()
+
+  if (!group) {
+    return {
+      data: null,
+      error: { message: 'Group not found' }
+    }
+  }
+
+  const { data: membership } = await supabase
+    .from('group_members')
+    .select('role')
+    .eq('group_id', groupId)
+    .eq('user_id', user.id)
+    .single()
+
+  const isAdmin = membership?.role === 'admin' || group.created_by === user.id
+
+  if (!isAdmin) {
+    return {
+      data: null,
+      error: { message: 'Only admins can add members' }
+    }
+  }
+
+  if (member.isExistingUser) {
+    // Add existing user to group
+    const { error: memberError } = await supabase
+      .from('group_members')
+      .insert({
+        group_id: groupId,
+        user_id: member.id,
+        role: 'member'
+      })
+
+    if (memberError) {
+      if (memberError.code === '23505') {
+        return {
+          data: null,
+          error: { message: 'User is already a member of this group' }
+        }
+      }
+      return {
+        data: null,
+        error: { message: memberError.message || 'Failed to add member' }
+      }
+    }
+  } else {
+    // Store pending invitation
+    const { error: inviteError } = await supabase
+      .from('group_invitations')
+      .insert({
+        group_id: groupId,
+        email: member.email.toLowerCase().trim(),
+        invited_by: user.id,
+        role: 'member',
+        status: 'pending'
+      })
+
+    if (inviteError) {
+      if (inviteError.code === '23505') {
+        return {
+          data: null,
+          error: { message: 'Invitation already sent to this email' }
+        }
+      }
+      return {
+        data: null,
+        error: { message: inviteError.message || 'Failed to send invitation' }
+      }
+    }
+
+    // Send email invite
+    const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invite/${group.invite_code}`;
+    const inviterName = user.user_metadata?.full_name || user.email || 'Someone'
+
+    await sendBulkGroupInviteEmails([{
+      toEmail: member.email,
+      groupName: group.name || 'the group',
+      inviterName,
+      inviteLink,
+    }])
+  }
+
+  revalidatePath('/groups')
+  revalidatePath('/dashboard')
+
+  return {
+    data: { success: true },
+    error: null
+  }
+}
+
+/**
+ * Accept a join request
+ */
+export async function acceptJoinRequestAction(requestId: string) {
+  const supabase = await createClient()
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return {
+      data: null,
+      error: { message: 'You must be logged in' }
+    }
+  }
+
+  // Get the join request
+  const { data: request, error: requestError } = await supabase
+    .from('group_join_requests')
+    .select('id, group_id, user_id, status')
+    .eq('id', requestId)
+    .single()
+
+  if (requestError || !request) {
+    return {
+      data: null,
+      error: { message: 'Join request not found' }
+    }
+  }
+
+  // Check if user is admin or creator
+  const { data: group } = await supabase
+    .from('groups')
+    .select('id, created_by')
+    .eq('id', request.group_id)
+    .single()
+
+  if (!group) {
+    return {
+      data: null,
+      error: { message: 'Group not found' }
+    }
+  }
+
+  const { data: membership } = await supabase
+    .from('group_members')
+    .select('role')
+    .eq('group_id', request.group_id)
+    .eq('user_id', user.id)
+    .single()
+
+  const isAdmin = membership?.role === 'admin' || group.created_by === user.id
+
+  if (!isAdmin) {
+    return {
+      data: null,
+      error: { message: 'Only admins can accept join requests' }
+    }
+  }
+
+  // Update request status to approved (trigger will add user to group)
+  const { error: updateError } = await supabase
+    .from('group_join_requests')
+    .update({
+      status: 'approved',
+      processed_at: new Date().toISOString(),
+      processed_by: user.id
+    })
+    .eq('id', requestId)
+
+  if (updateError) {
+    return {
+      data: null,
+      error: { message: updateError.message || 'Failed to accept request' }
+    }
+  }
+
+  revalidatePath('/groups')
+  revalidatePath('/dashboard')
+
+  return {
+    data: { success: true },
+    error: null
+  }
+}
+
+/**
+ * Reject a join request
+ */
+export async function rejectJoinRequestAction(requestId: string) {
+  const supabase = await createClient()
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return {
+      data: null,
+      error: { message: 'You must be logged in' }
+    }
+  }
+
+  // Get the join request
+  const { data: request, error: requestError } = await supabase
+    .from('group_join_requests')
+    .select('id, group_id')
+    .eq('id', requestId)
+    .single()
+
+  if (requestError || !request) {
+    return {
+      data: null,
+      error: { message: 'Join request not found' }
+    }
+  }
+
+  // Check if user is admin or creator
+  const { data: group } = await supabase
+    .from('groups')
+    .select('id, created_by')
+    .eq('id', request.group_id)
+    .single()
+
+  if (!group) {
+    return {
+      data: null,
+      error: { message: 'Group not found' }
+    }
+  }
+
+  const { data: membership } = await supabase
+    .from('group_members')
+    .select('role')
+    .eq('group_id', request.group_id)
+    .eq('user_id', user.id)
+    .single()
+
+  const isAdmin = membership?.role === 'admin' || group.created_by === user.id
+
+  if (!isAdmin) {
+    return {
+      data: null,
+      error: { message: 'Only admins can reject join requests' }
+    }
+  }
+
+  // Update request status to rejected
+  const { error: updateError } = await supabase
+    .from('group_join_requests')
+    .update({
+      status: 'rejected',
+      processed_at: new Date().toISOString(),
+      processed_by: user.id
+    })
+    .eq('id', requestId)
+
+  if (updateError) {
+    return {
+      data: null,
+      error: { message: updateError.message || 'Failed to reject request' }
+    }
+  }
+
+  revalidatePath('/groups')
+  revalidatePath('/dashboard')
+
+  return {
+    data: { success: true },
+    error: null
+  }
+}
+
+/**
+ * Remove a member from a group
+ * Note: Expenses are preserved - they will still reference the user
+ */
+export async function removeGroupMemberAction(groupId: string, memberId: string) {
+  const supabase = await createClient()
+
+  // Remove member from group
+  const { error: removeError } = await supabase.rpc('remove_group_member', {
+    p_member_id: memberId,
+  })
+
+  if (removeError) {
+    return {
+      data: null,
+      error: { message: removeError.message || 'Failed to remove member' }
+    }
+  }
+
+  // Note: Expenses are preserved because they reference users table, not group_members
+  // The expenses.paid_by and expense_participants.user_id will still reference the user
+  // even though they're no longer in the group. This is the desired behavior.
+
+  revalidatePath('/groups')
+  revalidatePath('/dashboard')
+
+  return {
+    data: { success: true },
     error: null
   }
 }

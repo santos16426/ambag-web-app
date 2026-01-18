@@ -1,7 +1,7 @@
 // Example component showing how to use the group queries
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { getMyGroupsClient } from '@/lib/supabase/queries/client'
 import { createGroupAction } from '@/hooks/groups'
 import type { Group } from '@/types/group'
@@ -11,6 +11,7 @@ import { GroupCardCreditSkeleton } from './GroupCardCreditSkeleton'
 import { GroupExpensesSection } from './GroupExpensesSection'
 import { CreateGroupFormEnhanced, type CreateGroupFormData } from './CreateGroupFormEnhanced'
 import { JoinGroupDialog } from './JoinGroupDialog'
+import { GroupMembersList } from './GroupMembersList'
 import { CreditCard, Plus, Sparkles, LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -100,14 +101,10 @@ export function GroupsList() {
       // Ignore if component unmounted
       if (cancelled) return
 
-      console.log('🔍 Groups fetch result:', { data, error, userId })
-
       if (error) {
-        console.error('❌ Error fetching groups:', error)
         setError(error.message)
       } else {
         const groupsData = data || []
-        console.log('✅ Groups data:', groupsData)
         setGroups(groupsData)
 
         // Set active group: first check cookie, then use first group
@@ -117,7 +114,6 @@ export function GroupsList() {
             ? savedActiveId
             : groupsData[0].id
 
-          console.log('📌 Setting active group:', activeId)
           setActiveGroupId(activeId)
           setActiveGroupCookie(activeId)
         } else {
@@ -423,11 +419,34 @@ export function GroupsList() {
           ))}
         </div>
       </div>
-
+      {/* Members section for active group */}
+      {activeGroup && (
+        <GroupMembersList
+          groupId={activeGroup.id}
+          userRole={activeGroup.user_role}
+          isCreator={activeGroup.created_by === userId}
+          onMemberChange={async () => {
+            // Refetch groups to update member counts on cards
+            if (userId) {
+              const { data } = await getMyGroupsClient(userId);
+              if (data) {
+                setGroups(data);
+                // Keep the same active group selected
+                const updatedActiveGroup = data.find(g => g.id === activeGroupId);
+                if (updatedActiveGroup) {
+                  setActiveGroupId(updatedActiveGroup.id);
+                }
+              }
+            }
+          }}
+        />
+      )}
       {/* Expenses section for active group */}
       {activeGroup && (
         <GroupExpensesSection groupName={activeGroup.name} />
       )}
+
+
     </div>
   )
 }

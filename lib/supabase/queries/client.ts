@@ -117,3 +117,97 @@ export async function createGroup(
 
   return { data: group, error: null };
 }
+
+/**
+ * Fetch all members of a group with user details
+ * Use in Client Components
+ */
+export async function getGroupMembers(groupId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from('group_members')
+    .select(`
+      id,
+      role,
+      joined_at,
+      user:users!group_members_user_id_fkey (
+        id,
+        email,
+        full_name,
+        avatar_url
+      )
+    `)
+    .eq('group_id', groupId)
+    .order('joined_at', { ascending: true });
+  if (error) {
+    console.error('Error fetching group members:', error);
+    return { data: null, error };
+  }
+
+  return { data: data || [], error: null };
+}
+
+/**
+ * Fetch pending join requests for a group
+ * Use in Client Components
+ */
+export async function getGroupJoinRequests(groupId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from('group_join_requests')
+    .select(`
+      id,
+      status,
+      requested_at,
+      user:users!group_join_requests_user_id_fkey (
+        id,
+        email,
+        full_name,
+        avatar_url
+      )
+    `)
+    .eq('group_id', groupId)
+    .eq('status', 'pending')
+    .order('requested_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching join requests:', error);
+    return { data: null, error };
+  }
+
+  return { data: data || [], error: null };
+}
+
+/**
+ * Fetch pending invitations for a group
+ * Use in Client Components
+ */
+export async function getGroupPendingInvitations(groupId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from('group_invitations')
+    .select(`
+      id,
+      email,
+      role,
+      invited_at,
+      invited_by:users!group_invitations_invited_by_fkey (
+        id,
+        full_name,
+        email
+      )
+    `)
+    .eq('group_id', groupId)
+    .eq('status', 'pending')
+    .order('invited_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching pending invitations:', error);
+    return { data: null, error };
+  }
+
+  return { data: data || [], error: null };
+}

@@ -20,14 +20,6 @@ export default function DebugAuthPage() {
     try {
       const authResult = await debugUserAuth()
       setResult(authResult)
-
-      // Also log to browser console
-      if (authResult.authenticated && authResult.user) {
-        console.log('✅ Your UUID:', authResult.user.id)
-        console.log('Full user data:', authResult.user)
-      } else {
-        console.log('❌ Not authenticated:', authResult.error)
-      }
     } catch (error) {
       console.error('Error checking auth:', error)
       setResult({
