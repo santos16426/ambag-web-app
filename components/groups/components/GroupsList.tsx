@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { getMyGroupsClient } from '@/lib/supabase/queries/groups.client'
+import { getMyGroupsClient } from '@/lib/supabase/queries/client'
 import { createGroupAction } from '@/hooks/groups'
 import type { Group } from '@/types/group'
 import { useUserId, useUser } from '@/lib/store/userStore'
