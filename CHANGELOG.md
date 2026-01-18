@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Expense Form UI** - comprehensive expense creation form with two-part layout (expense details and split options)
+- **Multi-Currency Support** - currency selector with 10 currencies (PHP, USD, JPY, KRW, EUR, GBP, CNY, AUD, CAD, SGD) and formatted input display
+- **Expense Split Options** - five split types: equally, exact amount, percentage, shares, and adjustment with auto-calculation
+- **Expense Form Transitions** - smooth expanding animation for form opening/closing with scale and opacity effects
+- **Expense List Transitions** - smooth transitions for expense cards with hover effects
+- **Expense Types** - type definitions for expenses, participants, and categories
+- **Expense Queries** - client-side Supabase queries for CRUD operations on expenses
 - **Overview Dashboard** - interactive dashboard with charts showing spending trends, group distribution, monthly comparison, and category breakdown
 - **Overview Charts** - area chart for spending trends, pie chart for group distribution, bar charts for monthly and category comparisons
 - **Theme Toggle** - dark and light mode support with smooth 300ms transitions
@@ -54,6 +61,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Auth Helper Functions** - utilities for debugging supabase authentication and session state
 
 ### Changed
+- **Expense Form Layout** - redesigned to minimal, modern two-part form with seamless border between sections
+- **Expense Form UI** - removed labels, headers, and card containers for cleaner look, added informational notes
+- **Date Format** - changed to "Month dd, YYYY" format with calendar icon
+- **Notes Field** - renamed to "Remarks" with updated placeholder text
+- **Paid By Field** - enhanced with member avatars and chevron icon
+- **Image Upload** - redesigned with dashed border, centered content, and hover-to-show remove button
 - **Global CSS Transitions** - added smooth 300ms transitions for all theme-aware properties (background-color, border-color, color, etc.)
 - **Groups Page** - made all text and components theme-aware with proper color variables
 - **Groups List** - updated "My Groups" heading and "New Group" button to be theme-aware
@@ -71,6 +84,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **State Management** - migrated from prop drilling to Zustand store for group and member state
 
 ### Fixed
+- **TypeScript Errors** - fixed type mismatches for Supabase join queries (user and payer fields can be arrays)
+- **Group Members Data Transformation** - properly transform Supabase join results to match GroupMember type
+- **Expense Participants Data Transformation** - properly transform Supabase join results to match ExpenseParticipant type
+- **Expense Payer Data Transformation** - properly transform Supabase join results to match Expense payer type
+- **Form Transition Wrapper** - moved transition animation to main border wrapper for seamless effect
+- **Expense List Wrapper** - removed duplicate border wrapper that wasn't part of transition
 - **Theme-Aware Text** - fixed "My Groups" heading and other hardcoded colors to use theme variables
 - **New Group Button** - ensured white text displays correctly in dark mode
 - **Group Members Visibility** - fixed RLS policy preventing members from seeing other members in the same group
