@@ -1,16 +1,67 @@
 "use client";
 
-import { Skeleton } from "@/components/ui/skeleton";
-import { Receipt, TrendingUp } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Receipt, DollarSign, TrendingUp, Users } from "lucide-react";
 import { useActiveGroup } from "@/lib/store/groupStore";
+import { ExpensesList } from "@/components/expenses/ExpensesList";
+import { getGroupExpenses } from "@/lib/supabase/queries/expenses";
+import type { Expense } from "@/types/expense";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function GroupExpensesSection() {
   const activeGroup = useActiveGroup();
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!activeGroup?.id) {
+      setExpenses([]);
+      setLoading(false);
+      return;
+    }
+
+    async function fetchExpenses() {
+      if (!activeGroup?.id) return;
+      setLoading(true);
+      try {
+        const result = await getGroupExpenses(activeGroup.id);
+        if (result.error) {
+          console.error("Error fetching expenses:", result.error);
+        } else {
+          setExpenses(result.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching expenses:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchExpenses();
+  }, [activeGroup?.id]);
 
   // Don't render if no active group
   if (!activeGroup) {
     return null;
   }
+
+  // Calculate summary statistics
+  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const expenseCount = expenses.length;
+  const avgExpense = expenseCount > 0 ? totalExpenses / expenseCount : 0;
+
+  // Get category breakdown
+  const categoryBreakdown = expenses.reduce((acc, exp) => {
+    const category = exp.category || "Other";
+    acc[category] = (acc[category] || 0) + exp.amount;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const topCategory = Object.entries(categoryBreakdown).sort(
+    ([, a], [, b]) => b - a
+  )[0];
+
   return (
     <div className="space-y-6 pt-8 border-t border-border">
       {/* Header */}
@@ -18,85 +69,73 @@ export function GroupExpensesSection() {
         <div className="space-y-1">
           <h3 className="text-2xl font-bold">Expenses</h3>
           <p className="text-sm text-muted-foreground">
-            Showing expenses for <span className="font-medium text-foreground">{activeGroup.name}</span>
+            Showing expenses for{" "}
+            <span className="font-medium text-foreground">{activeGroup.name}</span>
           </p>
         </div>
-        <Skeleton className="h-10 w-32" />
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="p-6 rounded-xl border border-border bg-card">
-            <div className="flex items-center justify-between mb-3">
-              <Skeleton className="w-8 h-8 rounded-full" />
-              <Skeleton className="w-16 h-5" />
-            </div>
-            <Skeleton className="h-8 w-24 mb-2" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-        ))}
-      </div>
-
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-border">
-        {["All", "Recent", "By Category"].map((tab, i) => (
-          <Skeleton key={i} className="h-10 w-24 rounded-t-lg" />
-        ))}
-      </div>
-
-      {/* Expense List */}
-      <div className="space-y-3">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors">
-            <Skeleton className="w-12 h-12 rounded-full shrink-0" />
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-5 w-32" />
-                <Skeleton className="h-6 w-20" />
-              </div>
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-4 w-20" />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Chart Section */}
-      <div className="p-6 rounded-xl border border-border bg-card">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-muted-foreground" />
-            <h4 className="font-semibold">Spending Trends</h4>
-          </div>
-          <Skeleton className="h-8 w-32" />
-        </div>
-        <div className="space-y-4">
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-16" />
-              </div>
-              <Skeleton className="h-3 w-full rounded-full" />
-            </div>
+            <Card key={i}>
+              <CardContent className="p-6">
+                <Skeleton className="h-8 w-24 mb-2" />
+                <Skeleton className="h-4 w-32" />
+              </CardContent>
+            </Card>
           ))}
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
+                </div>
+              </div>
+              <div className="text-2xl font-bold">${totalExpenses.toFixed(2)}</div>
+              <div className="text-sm text-muted-foreground">Total Expenses</div>
+            </CardContent>
+          </Card>
 
-      {/* Empty state message */}
-      <div className="text-center py-12">
-        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-          <Receipt className="w-8 h-8 text-muted-foreground" />
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <Receipt className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+              <div className="text-2xl font-bold">{expenseCount}</div>
+              <div className="text-sm text-muted-foreground">Total Count</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+              </div>
+              <div className="text-2xl font-bold">${avgExpense.toFixed(2)}</div>
+              <div className="text-sm text-muted-foreground">
+                Average Expense
+                {topCategory && (
+                  <span className="block text-xs mt-1">
+                    Top: {topCategory[0]} (${topCategory[1].toFixed(2)})
+                  </span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
-        <h4 className="font-semibold mb-2">Building expense tracker...</h4>
-        <p className="text-sm text-muted-foreground">
-          This section will show all expenses, splits, and settlements for this group.
-        </p>
-      </div>
+      )}
+
+      {/* Expenses List */}
+      <ExpensesList groupId={activeGroup.id} />
     </div>
   );
 }

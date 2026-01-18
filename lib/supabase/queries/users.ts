@@ -1,13 +1,7 @@
 // User queries for searching and inviting members
 
 import { createClient } from "@/lib/supabase/server";
-
-export type UserSearchResult = {
-  id: string;
-  email: string;
-  full_name: string | null;
-  avatar_url: string | null;
-};
+import type { UserSearchResult } from "@/types/user";
 
 /**
  * Search for a user by email address

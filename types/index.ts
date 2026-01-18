@@ -2,7 +2,7 @@
 
 // Auth types
 export type { User, AuthError, SignInData, SignUpData } from './auth'
-export type { UserType } from './user'
+export type { UserType, UserSearchResult } from './user'
 
 // Group types
 export type {
@@ -17,3 +17,14 @@ export type {
   GroupsQueryResult,
   GroupQueryResult,
 } from './group'
+
+// Expense types
+export type {
+  Expense,
+  ExpenseCategory,
+  ExpenseParticipant,
+  CreateExpenseData,
+  UpdateExpenseData,
+  ExpensesQueryResult,
+  ExpenseQueryResult,
+} from './expense'
