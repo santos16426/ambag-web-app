@@ -337,7 +337,7 @@ export function GroupsList() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-slate-950">
+          <h2 className="text-3xl font-bold text-foreground">
             My Groups
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
@@ -379,7 +379,7 @@ export function GroupsList() {
             <DrawerTrigger asChild>
               <Button
                 size="sm"
-                className="gap-2 bg-linear-to-r from-purple-600 via-90% to-purple-500 hover:from-purple-700 hover:to-purple-700"
+                className="gap-2 bg-linear-to-r from-purple-600 via-90% to-purple-500 hover:from-purple-700 hover:to-purple-700 text-white dark:text-white"
               >
                 <Plus className="w-4 h-4" />
                 New Group
