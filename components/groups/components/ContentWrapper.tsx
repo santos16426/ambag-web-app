@@ -4,6 +4,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { GroupsList } from "./GroupsList";
 import { GroupMembersList } from "./GroupMembersList";
 import { GroupExpensesSection } from "./GroupExpensesSection";
+import { Overview } from "./Overview";
 
 const DEFAULT_MENU = "Overview";
 
@@ -14,9 +15,7 @@ export function Content() {
   return (
     <div>
       {currentMenu === "Overview" && (
-        <div>
-          <p>Overview charts</p>
-        </div>
+        <Overview />
       )}
 
       {currentMenu === "Split Bill" && (

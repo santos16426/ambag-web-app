@@ -400,6 +400,36 @@ p {
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Smooth theme transitions - applied to theme-aware properties */
+  html {
+    color-scheme: light dark;
+    transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1), color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Smooth transitions for theme changes - all elements */
+  *,
+  *::before,
+  *::after {
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, background, background-image;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+    will-change: background-color, border-color, color;
+  }
+
+  /* Ensure body transitions smoothly */
+  body {
+    transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1), color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Exclude certain elements from transitions for better performance */
+  svg,
+  img,
+  video,
+  canvas,
+  iframe {
+    transition-property: opacity, filter;
+  }
 }
 
 @layer utilities {

@@ -8,6 +8,7 @@ import {
 
 import { NavMain } from "./NavMain"
 import { NavUser } from "./NavUser"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 import {
   Sidebar,
   SidebarContent,
@@ -62,7 +63,7 @@ export function AppSidebar({
                 <div className='flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br from-purple-600 to-purple-500 text-lg font-bold text-white shadow-lg transition-transform group-hover:scale-105'>
                   A
                 </div>
-                <span className='text-2xl font-bold text-slate-900 tracking-tight'>
+                <span className='text-2xl font-bold text-sidebar-foreground tracking-tight'>
                   Ambag
                 </span>
               </Link>
@@ -74,6 +75,7 @@ export function AppSidebar({
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
+        <ThemeToggle />
         <NavUser {...userData}/>
       </SidebarFooter>
     </Sidebar>

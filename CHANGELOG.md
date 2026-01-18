@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Overview Dashboard** - interactive dashboard with charts showing spending trends, group distribution, monthly comparison, and category breakdown
+- **Overview Charts** - area chart for spending trends, pie chart for group distribution, bar charts for monthly and category comparisons
+- **Theme Toggle** - dark and light mode support with smooth 300ms transitions
+- **Theme Provider** - next-themes integration with cookie-based theme persistence
+- **Theme Toggle Switch** - beautiful switch component with day/night mode, cloud and star patterns, and smooth animations
+- **Switch Component** - radix ui switch component for theme toggle
+- **Card Component** - shadcn/ui card component for dashboard cards
+- **Overview Statistics** - summary cards showing total expenses, active groups, total balance, and monthly spending
+- **Recent Expenses List** - displays last 5 expenses with details
 - **Zustand Group Store** - centralized state management for groups, active group, and members using Zustand
 - **AlertDialog Component** - shadcn/ui alert dialog component for confirmation dialogs
 - **Member Card UI** - redesigned member cards with horizontal chip style, hover tilt effects, and status badges
@@ -45,6 +54,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Auth Helper Functions** - utilities for debugging supabase authentication and session state
 
 ### Changed
+- **Global CSS Transitions** - added smooth 300ms transitions for all theme-aware properties (background-color, border-color, color, etc.)
+- **Groups Page** - made all text and components theme-aware with proper color variables
+- **Groups List** - updated "My Groups" heading and "New Group" button to be theme-aware
+- **Root Layout** - added ThemeProvider wrapper and suppressHydrationWarning for theme support
+- **App Sidebar** - added theme toggle switch in sidebar footer
+- **Content Wrapper** - integrated Overview component for dashboard view
 - **Groups Component** - removed hasFetched ref to allow proper re-fetching on navigation
 - **Login Flow** - switched from client-side to server-side authentication for reliable cookie persistence
 - **Member List UI** - redesigned from full-width list to horizontal chip cards with hover effects
@@ -56,6 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **State Management** - migrated from prop drilling to Zustand store for group and member state
 
 ### Fixed
+- **Theme-Aware Text** - fixed "My Groups" heading and other hardcoded colors to use theme variables
+- **New Group Button** - ensured white text displays correctly in dark mode
 - **Group Members Visibility** - fixed RLS policy preventing members from seeing other members in the same group
 - **Member Count Not Updating** - group cards now refresh member counts when members are added or removed
 - **Circular RLS Dependency** - resolved circular dependency in group_members RLS policy using security definer function
