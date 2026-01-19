@@ -146,66 +146,33 @@ export async function getGroupExpenses(
 }
 
 /**
- * Fetch a single expense by ID
+ * Fetch a single expense by ID with full participant details
+ * Uses RPC function to fetch expense and participants in a single call
  * Use in Client Components
  */
 export async function getExpense(expenseId: string): Promise<ExpenseQueryResult> {
   const supabase = createClient();
 
-  const { data, error } = await supabase
-    .from("expenses")
-    .select(`
-      id,
-      group_id,
-      paid_by,
-      amount,
-      description,
-      category,
-      expense_date,
-      created_at,
-      updated_at,
-      payer:users!expenses_paid_by_fkey (
-        id,
-        full_name,
-        avatar_url,
-        email
-      )
-    `)
-    .eq("id", expenseId)
-    .single();
+  // Use RPC function to get expense with participants in a single call
+  const { data, error } = await supabase.rpc("get_expense_with_participants", {
+    p_expense_id: expenseId,
+  });
 
   if (error) {
     console.error("Error fetching expense:", error);
     return { data: null, error };
   }
 
-  // Fetch participants
-  const { data: participants, error: participantsError } = await supabase
-    .from("expense_participants")
-    .select(`
-      id,
-      expense_id,
-      user_id,
-      amount_owed,
-      amount_paid,
-      user:users!expense_participants_user_id_fkey (
-        id,
-        full_name,
-        avatar_url,
-        email
-      )
-    `)
-    .eq("expense_id", expenseId);
-
-  if (participantsError) {
-    console.error("Error fetching expense participants:", participantsError);
-    return { data: null, error: participantsError };
+  if (!data || data === null) {
+    return { data: null, error: new Error("Expense not found") };
   }
 
-  const transformedParticipants: ExpenseParticipant[] = (participants || [])
+  // Transform the RPC response to Expense type
+  const expenseData = data as any;
+
+  const transformedParticipants: ExpenseParticipant[] = (expenseData.participants || [])
     .map((p: any) => {
-      const user = Array.isArray(p.user) ? p.user[0] : p.user;
-      if (!user) return null;
+      if (!p.user) return null;
       return {
         id: p.id,
         expense_id: p.expense_id,
@@ -213,28 +180,31 @@ export async function getExpense(expenseId: string): Promise<ExpenseQueryResult>
         amount_owed: p.amount_owed,
         amount_paid: p.amount_paid,
         user: {
-          id: user.id,
-          email: user.email,
-          full_name: user.full_name,
-          avatar_url: user.avatar_url,
+          id: p.user.id,
+          email: p.user.email,
+          full_name: p.user.full_name,
+          avatar_url: p.user.avatar_url,
         },
       } as ExpenseParticipant;
     })
     .filter((p): p is ExpenseParticipant => p !== null);
 
-  // Transform payer field
-  const payerData = (data as any).payer;
-  const payer = Array.isArray(payerData) ? payerData[0] : payerData;
-  const transformedPayer = payer ? {
-    id: payer.id,
-    email: payer.email,
-    full_name: payer.full_name,
-    avatar_url: payer.avatar_url,
-  } : undefined;
-
   const expense: Expense = {
-    ...data,
-    payer: transformedPayer,
+    id: expenseData.id,
+    group_id: expenseData.group_id,
+    paid_by: expenseData.paid_by,
+    amount: expenseData.amount,
+    description: expenseData.description,
+    category: expenseData.category,
+    expense_date: expenseData.expense_date,
+    created_at: expenseData.created_at,
+    updated_at: expenseData.updated_at,
+    payer: expenseData.payer ? {
+      id: expenseData.payer.id,
+      email: expenseData.payer.email,
+      full_name: expenseData.payer.full_name,
+      avatar_url: expenseData.payer.avatar_url,
+    } : undefined,
     participants: transformedParticipants,
   };
 

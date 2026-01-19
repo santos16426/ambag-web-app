@@ -4,83 +4,88 @@
 import { createClient } from "@/lib/supabase/client";
 import type {
   Group,
-  GroupMemberRecord,
-  SupabaseGroup,
   CreateGroupData,
   GroupsQueryResult,
   GroupQueryResult,
 } from "@/types/group";
 
 /**
- * Fetch groups for client components (includes pending invitations in member count)
+ * Fetch groups for client components with summary statistics
+ * Uses a single RPC call to reduce database round trips
  * Use in Client Components with 'use client'
  */
 export async function getMyGroupsClient(userId: string): Promise<GroupsQueryResult> {
   const supabase = createClient();
 
-  const { data, error } = await supabase
-    .from('group_members')
-    .select(`
-      id,
-      role,
-      joined_at,
-      group:groups (
-        id,
-        name,
-        description,
-        created_by,
-        invite_code,
-        created_at,
-        updated_at,
-        creator:users!groups_created_by_fkey (
-          id,
-          full_name,
-          avatar_url
-        )
-      )
-    `)
-    .eq('user_id', userId)
-    .order('joined_at', { ascending: false });
+  // Use the new RPC function to get all group data in a single call
+  const { data, error } = await supabase.rpc('get_user_groups_summary', {
+    p_user_id: userId,
+  });
 
   if (error) {
-    console.error('Error fetching groups:', error);
+    console.error('Error fetching groups summary:', error);
     return { data: null, error };
   }
 
-  if (!data) {
+  if (!data || !data.groups) {
     return { data: [], error: null };
   }
 
-  const groups = await Promise.all((data as GroupMemberRecord[]).map(async (item) => {
-    // In Supabase, the group key might be an array even if only one object is returned.
-    const group =
-      Array.isArray(item.group) && item.group.length > 0
-        ? item.group[0]
-        : item.group;
+  // Transform the RPC response to match Group type
+  type RPCGroupResponse = {
+    id: string;
+    name: string;
+    description: string | null;
+    created_by: string;
+    invite_code: string | null;
+    image_url: string | null;
+    created_at: string;
+    updated_at: string;
+    user_role: string;
+    joined_at: string;
+    member_count: number;
+    pending_invitations_count: number;
+    total_expenses: number;
+    total_settlements: number;
+    recent_transactions_count: number;
+    creator: {
+      id: string;
+      full_name: string | null;
+      avatar_url: string | null;
+    } | Array<{
+      id: string;
+      full_name: string | null;
+      avatar_url: string | null;
+    }>;
+  };
 
-    // Get current member count
-    const { count: memberCount } = await supabase
-      .from('group_members')
-      .select('*', { count: 'exact', head: true })
-      .eq('group_id', (group as SupabaseGroup).id);
-
-    // Get pending invitations count
-    const { count: pendingCount } = await supabase
-      .from('group_invitations')
-      .select('*', { count: 'exact', head: true })
-      .eq('group_id', (group as SupabaseGroup).id)
-      .eq('status', 'pending');
-
+  const groups: Group[] = (data.groups || []).map((group: RPCGroupResponse) => {
+    const creator = Array.isArray(group.creator) ? group.creator[0] : group.creator;
     return {
-      ...(group as SupabaseGroup),
-      user_role: item.role,
-      joined_at: item.joined_at,
-      member_count: memberCount || 0,
-      pending_invitations_count: pendingCount || 0,
+      id: group.id,
+      name: group.name,
+      description: group.description,
+      created_by: group.created_by,
+      invite_code: group.invite_code,
+      image_url: group.image_url || null,
+      created_at: group.created_at,
+      updated_at: group.updated_at,
+      user_role: group.user_role,
+      joined_at: group.joined_at,
+      member_count: group.member_count || 0,
+      pending_invitations_count: group.pending_invitations_count || 0,
+      total_expenses: group.total_expenses || 0,
+      total_settlements: group.total_settlements || 0,
+      recent_transactions_count: group.recent_transactions_count || 0,
+      creator: creator ? {
+        id: creator.id,
+        full_name: creator.full_name,
+        avatar_url: creator.avatar_url,
+      } : undefined,
     };
-  }));
+  });
 
-  return { data: groups as Group[], error: null };
+  return { data: groups, error: null };
 }
 
 /**
@@ -210,4 +215,108 @@ export async function getGroupPendingInvitations(groupId: string) {
   }
 
   return { data: data || [], error: null };
+}
+
+/**
+ * Fetch all member-related data for a group in a single call
+ * Returns members, join requests, and pending invitations with counts
+ * Use in Client Components
+ */
+export async function getGroupMembersSummary(groupId: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("get_group_members_summary", {
+    p_group_id: groupId,
+  });
+
+  if (error) {
+    console.error("Error fetching group members summary:", error);
+    return { data: null, error };
+  }
+
+  if (!data) {
+    return {
+      data: {
+        members: [],
+        join_requests: [],
+        pending_invitations: [],
+        counts: {
+          members_count: 0,
+          join_requests_count: 0,
+          pending_invitations_count: 0,
+        },
+      },
+      error: null,
+    };
+  }
+
+  // Transform the data to match our types
+  // Members
+  const members = (data.members || []).map((item: {
+    id: string;
+    role: string;
+    joined_at: string;
+    user: {
+      id: string;
+      email: string;
+      full_name: string | null;
+      avatar_url: string | null;
+    };
+  }) => ({
+    id: item.id,
+    role: item.role as "admin" | "member",
+    joined_at: item.joined_at,
+    user: item.user,
+  }));
+
+  // Join requests
+  const joinRequests = (data.join_requests || []).map((item: {
+    id: string;
+    status: string;
+    requested_at: string;
+    user: {
+      id: string;
+      email: string;
+      full_name: string | null;
+      avatar_url: string | null;
+    };
+  }) => ({
+    id: item.id,
+    status: item.status,
+    requested_at: item.requested_at,
+    user: item.user,
+  }));
+
+  // Pending invitations
+  const pendingInvitations = (data.pending_invitations || []).map((item: {
+    id: string;
+    email: string;
+    role: string;
+    invited_at: string;
+    invited_by: {
+      id: string;
+      full_name: string | null;
+      email: string;
+    } | null;
+  }) => ({
+    id: item.id,
+    email: item.email,
+    role: item.role,
+    invited_at: item.invited_at,
+    invited_by: item.invited_by,
+  }));
+
+  return {
+    data: {
+      members,
+      join_requests: joinRequests,
+      pending_invitations: pendingInvitations,
+      counts: data.counts || {
+        members_count: 0,
+        join_requests_count: 0,
+        pending_invitations_count: 0,
+      },
+    },
+    error: null,
+  };
 }

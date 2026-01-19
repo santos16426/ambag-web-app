@@ -3,45 +3,51 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
-import { useActiveGroup } from "@/lib/store/groupStore";
+import {
+  useActiveGroup,
+  useGroupMembers,
+  useGroupExpenses,
+  useGroupSettlements,
+  useGroupBalance,
+  useDataLoading,
+  useGroupStore,
+} from "@/lib/store/groupStore";
 import { ExpensesList } from "@/components/expenses/ExpensesList";
-import { getGroupExpenses } from "@/lib/supabase/queries/expenses";
-import { getGroupMembers } from "@/lib/supabase/queries/client";
-import type { Expense } from "@/types/expense";
-import type { GroupMember } from "@/types/group";
+import { getGroupDataSummary } from "@/lib/supabase/queries/groupData";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getUserBalance } from "@/lib/utils/balance";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useUserId } from "@/lib/store/userStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getGroupSettlements } from "@/lib/supabase/queries/settlements";
-import type { Settlement } from "@/types/settlement";
-import { getUserBalanceInGroup } from "@/lib/supabase/queries/balances";
-import type { MemberBalance } from "@/lib/utils/balance";
 
 export function GroupExpensesSection() {
   const activeGroup = useActiveGroup();
   const userId = useUserId();
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [members, setMembers] = useState<GroupMember[]>([]);
-  const [settlements, setSettlements] = useState<Settlement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [serverBalance, setServerBalance] = useState<MemberBalance | null>(null);
+  const members = useGroupMembers();
+  const expenses = useGroupExpenses();
+  const settlements = useGroupSettlements();
+  const balance = useGroupBalance();
+  const loading = useDataLoading();
+  const {
+    setExpenses,
+    setSettlements,
+    setMembers,
+    setBalance,
+    setDataLoading,
+    setDataLastFetched,
+  } = useGroupStore();
   const [showOweDetails, setShowOweDetails] = useState(false);
   const [showOwedDetails, setShowOwedDetails] = useState(false);
   const dataFetchedRef = useRef<string | null>(null);
   const isFetchingRef = useRef<boolean>(false);
 
   useEffect(() => {
-    if (!activeGroup?.id) {
-      setExpenses([]);
-      setLoading(false);
+    if (!activeGroup?.id || !userId) {
       dataFetchedRef.current = null;
       return;
     }
 
     // Only fetch if group ID has changed (not on every render)
-    const groupKey = `${activeGroup.id}-${userId || ''}`;
+    const groupKey = `${activeGroup.id}-${userId}`;
     if (dataFetchedRef.current === groupKey || isFetchingRef.current) {
       return; // Data already fetched for this group or currently fetching - prevent re-fetching
     }
@@ -51,66 +57,25 @@ export function GroupExpensesSection() {
     dataFetchedRef.current = groupKey;
 
     async function fetchData() {
-      if (!activeGroup?.id) {
+      if (!activeGroup?.id || !userId) {
         isFetchingRef.current = false;
         return;
       }
-      setLoading(true);
+      setDataLoading(true);
       try {
-        const [expensesResult, membersResult, settlementsResult] = await Promise.all([
-          getGroupExpenses(activeGroup.id),
-          getGroupMembers(activeGroup.id),
-          getGroupSettlements(activeGroup.id),
-        ]);
+        // Single consolidated call instead of 4 separate calls
+        const result = await getGroupDataSummary(activeGroup.id, userId);
 
-        if (expensesResult.error) {
-          console.error("Error fetching expenses:", expensesResult.error);
-        } else {
-          setExpenses(expensesResult.data || []);
+        if (result.error) {
+          console.error("Error fetching group data:", result.error);
+        } else if (result.data) {
+          // Update store with all data at once
+          setExpenses(result.data.expenses);
+          setSettlements(result.data.settlements);
+          setMembers(result.data.members);
+          setBalance(result.data.balance);
+          setDataLastFetched(new Date().toISOString());
         }
-
-        if (membersResult.error) {
-          console.error("Error fetching members:", membersResult.error);
-        } else if (membersResult.data) {
-          // Transform the data to match GroupMember type
-          const transformedMembers: GroupMember[] = membersResult.data
-            .map((item: any) => {
-              const user = Array.isArray(item.user) ? item.user[0] : item.user;
-              if (!user) return null;
-              return {
-                id: item.id,
-                role: item.role as "admin" | "member",
-                joined_at: item.joined_at,
-                user: {
-                  id: user.id,
-                  email: user.email,
-                  full_name: user.full_name,
-                  avatar_url: user.avatar_url,
-                },
-              };
-            })
-            .filter((m): m is GroupMember => m !== null);
-          setMembers(transformedMembers);
-        }
-
-        if (settlementsResult.error) {
-          console.error("Error fetching settlements:", settlementsResult.error);
-        } else {
-          setSettlements(settlementsResult.data || []);
-        }
-
-        // Fetch server-side balance calculation (prioritized)
-        if (userId && activeGroup?.id) {
-          const balanceResult = await getUserBalanceInGroup(activeGroup.id, userId);
-          if (balanceResult.error) {
-            console.error("Error fetching server balance:", balanceResult.error);
-            // If server calculation fails, we'll fall back to client-side
-            setServerBalance(null);
-          } else {
-            setServerBalance(balanceResult.data || null);
-          }
-        }
-
       } catch (error) {
         console.error("Error fetching data:", error);
         // Reset ref on error so it can retry
@@ -118,7 +83,7 @@ export function GroupExpensesSection() {
           dataFetchedRef.current = null;
         }
       } finally {
-        setLoading(false);
+        setDataLoading(false);
         isFetchingRef.current = false;
       }
     }
@@ -132,13 +97,8 @@ export function GroupExpensesSection() {
     return null;
   }
 
-  // Use server-side balance calculation (prioritized)
-  // Fall back to client-side calculation only if server balance is not available
-  const clientBalance = userId && !serverBalance
-    ? getUserBalance(expenses, members, userId, settlements)
-    : null;
-
-  const userBalance = serverBalance || clientBalance;
+  // Use balance from store (server-side calculation)
+  const userBalance = balance;
 
   // Filter out zero amounts (using 0.01 threshold for floating point precision)
   const owesToFiltered = userBalance
@@ -369,24 +329,21 @@ export function GroupExpensesSection() {
           groupId={activeGroup.id}
           members={members}
           onExpensesUpdate={async () => {
-            // Refresh expenses, settlements, and balance when updated
+            // Refresh all data using consolidated function
             if (activeGroup?.id && userId) {
-              const [expensesResult, settlementsResult, balanceResult] = await Promise.all([
-                getGroupExpenses(activeGroup.id),
-                getGroupSettlements(activeGroup.id),
-                getUserBalanceInGroup(activeGroup.id, userId),
-              ]);
-              if (expensesResult.data) {
-                setExpenses(expensesResult.data);
-              }
-              if (settlementsResult.data) {
-                setSettlements(settlementsResult.data);
-              }
-              if (balanceResult.error) {
-                console.error("Error refreshing server balance:", balanceResult.error);
-                setServerBalance(null);
-              } else {
-                setServerBalance(balanceResult.data || null);
+              // Reset fetch ref to allow re-fetch
+              dataFetchedRef.current = null;
+              isFetchingRef.current = false;
+
+              const result = await getGroupDataSummary(activeGroup.id, userId);
+              if (result.error) {
+                console.error("Error refreshing group data:", result.error);
+              } else if (result.data) {
+                setExpenses(result.data.expenses);
+                setSettlements(result.data.settlements);
+                setMembers(result.data.members);
+                setBalance(result.data.balance);
+                setDataLastFetched(new Date().toISOString());
               }
             }
           }}

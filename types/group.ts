@@ -38,6 +38,8 @@ export type Group = {
   joined_at?: string;
   members?: GroupMember[];
   total_expenses?: number;
+  total_settlements?: number;
+  recent_transactions_count?: number;
 };
 
 // Supabase return types (internal use)
@@ -79,5 +81,47 @@ export type GroupsQueryResult = {
 
 export type GroupQueryResult = {
   data: Group | null;
+  error: Error | null;
+};
+
+// Member-related types
+export type JoinRequest = {
+  id: string;
+  status: string;
+  requested_at: string;
+  user: {
+    id: string;
+    email: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  };
+};
+
+export type PendingInvitation = {
+  id: string;
+  email: string;
+  role: string;
+  invited_at: string;
+  invited_by: {
+    id: string;
+    full_name: string | null;
+    email: string;
+  } | null;
+};
+
+// Consolidated member summary response from RPC
+export type GroupMembersSummary = {
+  members: GroupMember[];
+  join_requests: JoinRequest[];
+  pending_invitations: PendingInvitation[];
+  counts: {
+    members_count: number;
+    join_requests_count: number;
+    pending_invitations_count: number;
+  };
+};
+
+export type GroupMembersSummaryResult = {
+  data: GroupMembersSummary | null;
   error: Error | null;
 };

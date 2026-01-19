@@ -5,9 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  getGroupMembers,
-  getGroupJoinRequests,
-  getGroupPendingInvitations,
+  getGroupMembersSummary,
 } from "@/lib/supabase/queries/client";
 import {
   addGroupMemberAction,
@@ -34,7 +32,7 @@ import {
   useMembersLoading,
 } from "@/lib/store/groupStore";
 import { getMyGroupsClient } from "@/lib/supabase/queries/client";
-import type { GroupMember } from "@/types/group";
+import type { JoinRequest, PendingInvitation } from "@/types/group";
 import {
   Drawer,
   DrawerContent,
@@ -54,29 +52,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
-type JoinRequest = {
-  id: string;
-  status: string;
-  requested_at: string;
-  user: {
-    id: string;
-    email: string;
-    full_name: string | null;
-    avatar_url: string | null;
-  };
-};
-
-type PendingInvitation = {
-  id: string;
-  email: string;
-  role: string;
-  invited_at: string;
-  invited_by: {
-    id: string;
-    full_name: string | null;
-    email: string;
-  } | null;
-};
 
 export function GroupMembersList() {
   const userId = useUserId();
@@ -84,7 +59,7 @@ export function GroupMembersList() {
   const activeGroupId = useActiveGroupId();
   const members = useGroupMembers();
   const loading = useMembersLoading();
-  const { setMembers, setMembersLoading, setGroups } = useGroupStore();
+  const { setMembers, setMembersLoading, setGroups, setMemberCounts } = useGroupStore();
 
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [pendingInvitations, setPendingInvitations] = useState<
@@ -102,111 +77,20 @@ export function GroupMembersList() {
 
     setMembersLoading(true);
     try {
-      const [membersResult, requestsResult, invitationsResult] =
-        await Promise.all([
-          getGroupMembers(activeGroupId),
-          getGroupJoinRequests(activeGroupId),
-          getGroupPendingInvitations(activeGroupId),
-        ]);
+      const result = await getGroupMembersSummary(activeGroupId);
 
-      if (membersResult.data) {
-        // Transform the data to match GroupMember type
-        const transformedMembers: GroupMember[] = membersResult.data
-          .map((item: {
-            id: string;
-            role: string;
-            joined_at: string;
-            user: {
-              id: string;
-              email: string;
-              full_name: string | null;
-              avatar_url: string | null;
-            } | Array<{
-              id: string;
-              email: string;
-              full_name: string | null;
-              avatar_url: string | null;
-            }>;
-          }) => {
-            const user = Array.isArray(item.user) ? item.user[0] : item.user;
-            if (!user) return null; // Skip if user data is missing
-            return {
-              id: item.id,
-              role: item.role as "admin" | "member",
-              joined_at: item.joined_at,
-              user: {
-                id: user.id,
-                email: user.email,
-                full_name: user.full_name,
-                avatar_url: user.avatar_url,
-              },
-            };
-          })
-          .filter((m): m is GroupMember => m !== null);
-        setMembers(transformedMembers);
-      }
-
-      if (requestsResult.data) {
-        const transformedRequests: JoinRequest[] = requestsResult.data.map((item: {
-          id: string;
-          status: string;
-          requested_at: string;
-          user: {
-            id: string;
-            email: string;
-            full_name: string | null;
-            avatar_url: string | null;
-          } | Array<{
-            id: string;
-            email: string;
-            full_name: string | null;
-            avatar_url: string | null;
-          }>;
-        }) => {
-          const user = Array.isArray(item.user) ? item.user[0] : item.user;
-          return {
-            id: item.id,
-            status: item.status,
-            requested_at: item.requested_at,
-            user: user || {
-              id: "",
-              email: "",
-              full_name: null,
-              avatar_url: null,
-            },
-          };
-        });
-        setJoinRequests(transformedRequests);
-      }
-
-      if (invitationsResult.data) {
-        const transformedInvitations: PendingInvitation[] = invitationsResult.data.map((item: {
-          id: string;
-          email: string;
-          role: string;
-          invited_at: string;
-          invited_by: {
-            id: string;
-            full_name: string | null;
-            email: string;
-          } | Array<{
-            id: string;
-            full_name: string | null;
-            email: string;
-          }> | null;
-        }) => {
-          const invitedBy = item.invited_by
-            ? (Array.isArray(item.invited_by) ? item.invited_by[0] : item.invited_by)
-            : null;
-          return {
-            id: item.id,
-            email: item.email,
-            role: item.role,
-            invited_at: item.invited_at,
-            invited_by: invitedBy,
-          };
-        });
-        setPendingInvitations(transformedInvitations);
+      if (result.data) {
+        setMembers(result.data.members);
+        setJoinRequests(result.data.join_requests);
+        setPendingInvitations(result.data.pending_invitations);
+        // Update counts in store for ContentWrapper to use
+        setMemberCounts(
+          result.data.counts.join_requests_count,
+          result.data.counts.pending_invitations_count
+        );
+      } else if (result.error) {
+        console.error("Error fetching members data:", result.error);
+        toast.error("Failed to load members");
       }
     } catch (error) {
       console.error("Error fetching members data:", error);
@@ -216,7 +100,9 @@ export function GroupMembersList() {
       // Trigger animation after data is loaded
       setTimeout(() => setShowCards(true), 50);
     }
-  }, [activeGroupId, setMembers, setMembersLoading]);
+    // Zustand actions (setMembers, setMembersLoading) are stable and don't need to be in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeGroupId]);
 
   useEffect(() => {
     if (!activeGroupId) return;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { ExpenseCard } from "./ExpenseCard";
 import { ExpenseDetailDrawer } from "./ExpenseDetailDrawer";
 import { Button } from "@/components/ui/button";
@@ -21,9 +21,9 @@ import type { Expense } from "@/types/expense";
 import { useUserId } from "@/lib/store/userStore";
 import { ExpenseForm } from "./ExpenseForm";
 import type { GroupMember } from "@/types/group";
-import { getGroupMembers } from "@/lib/supabase/queries/client";
+import { useGroupMembers, useGroupExpenses, useGroupSettlements, useDataLastFetched, useGroupStore } from "@/lib/store/groupStore";
 import { toast } from "sonner";
-import { createExpense, deleteExpense, updateExpense } from "@/lib/supabase/queries/expenses";
+import { createExpense, deleteExpense, updateExpense, getExpense } from "@/lib/supabase/queries/expenses";
 import type { CreateExpenseData } from "@/types/expense";
 import { getGroupSettlements, updateSettlement, deleteSettlement, createSettlement } from "@/lib/supabase/queries/settlements";
 import type { Settlement, UpdateSettlementData, CreateSettlementData } from "@/types/settlement";
@@ -39,6 +39,13 @@ interface ExpensesListProps {
 const ITEMS_PER_PAGE = 20;
 
 export function ExpensesList({ groupId, members: membersProp, onExpensesUpdate }: ExpensesListProps) {
+  // Use members from store if available, fallback to prop
+  const storeMembers = useGroupMembers();
+  const storeExpenses = useGroupExpenses();
+  const storeSettlements = useGroupSettlements();
+  const dataLastFetched = useDataLastFetched();
+  const { updateExpense: updateExpenseInStore } = useGroupStore();
+  const effectiveMembers = membersProp || (storeMembers.length > 0 ? storeMembers : []);
   const userId = useUserId();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
@@ -62,6 +69,8 @@ export function ExpensesList({ groupId, members: membersProp, onExpensesUpdate }
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const formRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const dataFetchedRef = useRef<string | null>(null);
+  const isFetchingRef = useRef<boolean>(false); // Track if fetch is in progress
 
   // Store stable counts in state
   const [counts, setCounts] = useState({
@@ -70,9 +79,30 @@ export function ExpensesList({ groupId, members: membersProp, onExpensesUpdate }
     recent: 0,
   });
 
-  // Initial load
+  // Initial load - use store data if available, otherwise fetch
   useEffect(() => {
-    if (!groupId) return;
+    if (!groupId) {
+      dataFetchedRef.current = null;
+      return;
+    }
+
+    // Prevent duplicate fetches - track by groupId only
+    // Also check if we're already fetching to prevent concurrent fetches
+    if (dataFetchedRef.current === groupId || isFetchingRef.current) {
+      return;
+    }
+
+    // Mark as fetching immediately to prevent race conditions
+    dataFetchedRef.current = groupId;
+    isFetchingRef.current = true;
+
+    // Capture store values at effect execution time (not in dependency array to avoid loops)
+    const currentStoreExpenses = storeExpenses;
+    const currentStoreSettlements = storeSettlements;
+    const currentDataLastFetched = dataLastFetched;
+
+    // Check if we already have data in store from GroupExpensesSection
+    const hasStoreData = currentStoreExpenses.length > 0 || currentStoreSettlements.length > 0;
 
     async function fetchInitialData() {
       setLoading(true);
@@ -82,21 +112,60 @@ export function ExpensesList({ groupId, members: membersProp, onExpensesUpdate }
       setHasMoreSettlements(true);
 
       try {
-        // Fetch expenses, settlements, counts, and members in parallel
-        // Using combined function to reduce database calls
-        const [transactionsResult, membersResult] = await Promise.all([
-          getGroupTransactions(groupId, {
-            expensesLimit: ITEMS_PER_PAGE,
+        // If we have store data, use it for initial display and only fetch counts
+        if (hasStoreData && currentDataLastFetched) {
+          // Use store data for initial display
+          const paginatedExpenses = currentStoreExpenses.slice(0, ITEMS_PER_PAGE);
+          const paginatedSettlements = currentStoreSettlements.slice(0, ITEMS_PER_PAGE);
+
+          setExpenses(paginatedExpenses);
+          setSettlements(paginatedSettlements);
+
+          // Still need to fetch counts
+          const transactionsResult = await getGroupTransactions(groupId, {
+            expensesLimit: 1, // Just need counts
             expensesOffset: 0,
-            settlementsLimit: ITEMS_PER_PAGE,
+            settlementsLimit: 1, // Just need counts
             settlementsOffset: 0,
-          }),
-          membersProp ? Promise.resolve({ data: null, error: null }) : getGroupMembers(groupId),
-        ]);
+          });
+
+          if (transactionsResult.data) {
+            setCounts({
+              expenses: transactionsResult.data.counts.expenses_count,
+              settlements: transactionsResult.data.counts.settlements_count,
+              recent: transactionsResult.data.counts.recent_count,
+            });
+
+            // Update pagination state based on store data
+            setHasMoreExpenses(currentStoreExpenses.length > ITEMS_PER_PAGE);
+            setHasMoreSettlements(currentStoreSettlements.length > ITEMS_PER_PAGE);
+            setExpensesOffset(paginatedExpenses.length);
+            setSettlementsOffset(paginatedSettlements.length);
+            setHasMore(
+              (currentStoreExpenses.length > ITEMS_PER_PAGE) ||
+              (currentStoreSettlements.length > ITEMS_PER_PAGE)
+            );
+          }
+
+          setLoading(false);
+          isFetchingRef.current = false;
+          return;
+        }
+
+        // Otherwise, fetch paginated data normally
+        const transactionsResult = await getGroupTransactions(groupId, {
+          expensesLimit: ITEMS_PER_PAGE,
+          expensesOffset: 0,
+          settlementsLimit: ITEMS_PER_PAGE,
+          settlementsOffset: 0,
+        });
 
         if (transactionsResult.error) {
           console.error("Error fetching transactions:", transactionsResult.error);
           toast.error("Failed to load transactions");
+          // Reset refs on error so it can retry
+          dataFetchedRef.current = null;
+          isFetchingRef.current = false;
         } else if (transactionsResult.data) {
           // Set expenses and settlements
           const expensesData = transactionsResult.data.expenses || [];
@@ -123,53 +192,18 @@ export function ExpensesList({ groupId, members: membersProp, onExpensesUpdate }
           );
         }
 
-        if (!membersProp) {
-          if (membersResult.error) {
-            console.error("Error fetching members:", membersResult.error);
-          } else if (membersResult.data) {
-            // Transform the data to match GroupMember type
-            const transformedMembers: GroupMember[] = membersResult.data
-              .map((item: {
-                id: string;
-                role: string;
-                joined_at: string;
-                user: {
-                  id: string;
-                  email: string;
-                  full_name: string | null;
-                  avatar_url: string | null;
-                } | Array<{
-                  id: string;
-                  email: string;
-                  full_name: string | null;
-                  avatar_url: string | null;
-                }>;
-              }) => {
-                const user = Array.isArray(item.user) ? item.user[0] : item.user;
-                if (!user) return null; // Skip if user data is missing
-                return {
-                  id: item.id,
-                  role: item.role as "admin" | "member",
-                  joined_at: item.joined_at,
-                  user: {
-                    id: user.id,
-                    email: user.email,
-                    full_name: user.full_name,
-                    avatar_url: user.avatar_url,
-                  },
-                };
-              })
-              .filter((m): m is GroupMember => m !== null);
-            setMembers(transformedMembers);
-          }
-        } else {
+        // Use members from store or prop
+        if (membersProp) {
           setMembers(membersProp);
+        } else if (storeMembers.length > 0) {
+          setMembers(storeMembers);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load data");
       } finally {
         setLoading(false);
+        isFetchingRef.current = false;
       }
     }
 
@@ -177,60 +211,38 @@ export function ExpensesList({ groupId, members: membersProp, onExpensesUpdate }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId]);
 
-  // Sync members state when membersProp changes
+  // Sync members state when membersProp or store members change
   useEffect(() => {
     if (membersProp) {
       setMembers(membersProp);
+    } else if (storeMembers.length > 0) {
+      setMembers(storeMembers);
     }
-  }, [membersProp]);
+  }, [membersProp, storeMembers]);
 
-  // Fetch members if empty when form opens
+  // Fetch members if empty when form opens (use store first, then fetch if needed)
   useEffect(() => {
     if ((showForm || editingExpense || showPaymentForm || editingSettlement) && members.length === 0 && groupId) {
+      // First try to use store members
+      if (storeMembers.length > 0) {
+        setMembers(storeMembers);
+        return;
+      }
+
+      // Only fetch if store is also empty
       async function fetchMembers() {
-        const membersResult = await getGroupMembers(groupId);
+        const { getGroupMembersSummary } = await import("@/lib/supabase/queries/client");
+        const membersResult = await getGroupMembersSummary(groupId);
         if (membersResult.error) {
           console.error("Error fetching members:", membersResult.error);
         } else if (membersResult.data) {
-          // Transform the data to match GroupMember type
-          const transformedMembers: GroupMember[] = membersResult.data
-            .map((item: {
-              id: string;
-              role: string;
-              joined_at: string;
-              user: {
-                id: string;
-                email: string;
-                full_name: string | null;
-                avatar_url: string | null;
-              } | Array<{
-                id: string;
-                email: string;
-                full_name: string | null;
-                avatar_url: string | null;
-              }>;
-            }) => {
-              const user = Array.isArray(item.user) ? item.user[0] : item.user;
-              if (!user) return null;
-              return {
-                id: item.id,
-                role: item.role as "admin" | "member",
-                joined_at: item.joined_at,
-                user: {
-                  id: user.id,
-                  email: user.email,
-                  full_name: user.full_name,
-                  avatar_url: user.avatar_url,
-                },
-              };
-            })
-            .filter((m): m is GroupMember => m !== null);
-          setMembers(transformedMembers);
+          // Use members directly from the consolidated response (already in correct format)
+          setMembers(membersResult.data.members);
         }
       }
       fetchMembers();
     }
-  }, [showForm, editingExpense, showPaymentForm, editingSettlement, members.length, groupId]);
+  }, [showForm, editingExpense, showPaymentForm, editingSettlement, members.length, groupId, storeMembers]);
 
   const handleCreateExpense = async (data: any) => {
     try {
@@ -270,8 +282,61 @@ export function ExpensesList({ groupId, members: membersProp, onExpensesUpdate }
     }
   };
 
-  const handleEditExpense = (expense: Expense) => {
-    setEditingExpense(expense);
+  const handleEditExpense = async (expense: Expense) => {
+    // First check if expense already has complete participant data (amount_owed > 0)
+    // Store data and list data might have lightweight participants with amount_owed: 0
+    const hasCompleteData = expense.participants?.some(
+      (p) => p.amount_owed > 0 || p.amount_paid > 0
+    );
+
+    // If expense already has complete participant data, use it directly
+    if (hasCompleteData) {
+      setEditingExpense(expense);
+      setShowForm(false);
+      setShowPaymentForm(false);
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 100);
+      return;
+    }
+
+    // Check store for expense with complete data (might have been fetched before)
+    const storeExpense = storeExpenses.find((e) => e.id === expense.id);
+    const storeHasCompleteData = storeExpense?.participants?.some(
+      (p) => p.amount_owed > 0 || p.amount_paid > 0
+    );
+
+    // If store has complete data, use it
+    if (storeExpense && storeHasCompleteData) {
+      setEditingExpense(storeExpense);
+      setShowForm(false);
+      setShowPaymentForm(false);
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 100);
+      return;
+    }
+
+    // Otherwise, fetch full expense details with participant amounts
+    // The expense from list might only have lightweight participant data
+    try {
+      const fullExpenseResult = await getExpense(expense.id);
+      if (fullExpenseResult.error) {
+        console.error("Error fetching full expense details:", fullExpenseResult.error);
+        // Fall back to the expense from list if fetch fails
+        setEditingExpense(expense);
+      } else if (fullExpenseResult.data) {
+        // Update store with full expense data so future edits can use it
+        updateExpenseInStore(expense.id, fullExpenseResult.data);
+        setEditingExpense(fullExpenseResult.data);
+      } else {
+        setEditingExpense(expense);
+      }
+    } catch (error) {
+      console.error("Error fetching expense details:", error);
+      // Fall back to the expense from list if fetch fails
+      setEditingExpense(expense);
+    }
     setShowForm(false); // Hide add form if open
     setShowPaymentForm(false); // Hide payment form if open
     // Scroll to form after a brief delay to ensure it's rendered
