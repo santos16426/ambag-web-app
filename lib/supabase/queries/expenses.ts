@@ -187,7 +187,7 @@ export async function getExpense(expenseId: string): Promise<ExpenseQueryResult>
         },
       } as ExpenseParticipant;
     })
-    .filter((p): p is ExpenseParticipant => p !== null);
+    .filter((p: ExpenseParticipant | null): p is ExpenseParticipant => p !== null);
 
   const expense: Expense = {
     id: expenseData.id,

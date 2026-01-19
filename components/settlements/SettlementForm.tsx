@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { formatCurrency as formatCurrencyAmount, DEFAULT_CURRENCY, formatCurrencyInput as formatCurrencyInputUtil } from "@/lib/utils/currency";
+import { formatCurrency as formatCurrencyAmount, DEFAULT_CURRENCY, formatCurrencyInput as formatCurrencyInputUtil, CURRENCIES } from "@/lib/utils/currency";
 import type { Currency } from "@/lib/utils/currency";
 import type { CreateSettlementData, UpdateSettlementData, Settlement } from "@/types/settlement";
 import type { GroupMember } from "@/types/group";
