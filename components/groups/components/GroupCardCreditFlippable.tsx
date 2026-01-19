@@ -159,7 +159,7 @@ export function GroupCardCreditFlippable({ group, isActive, onClick }: GroupCard
                 <p className="text-lg font-bold">{formatCurrency(totalExpenses)}</p>
               </div>
 
-              {/* Invite Code - spans 2 columns */}
+              {/* Invite Code - spans 3 columns */}
               {group.invite_code && (
                 <div className="col-span-3 bg-white/10 backdrop-blur-sm rounded-lg p-2">
                   <div className="flex items-center justify-between mb-0.5">

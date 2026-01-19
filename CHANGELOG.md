@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Consolidated Group Data Queries** - single RPC function `get_group_data_summary` to fetch expenses, settlements, members, and balance in one call
+- **Consolidated Member Queries** - single RPC function `get_group_members_summary` to fetch members, join requests, and pending invitations in one call
+- **Consolidated Group Summary** - single RPC function `get_user_groups_summary` to fetch all group data with statistics in one call
+- **Consolidated Transaction Queries** - single RPC function `get_group_transactions` to fetch paginated expenses and settlements with counts in one call
+- **Single Expense Fetch** - RPC function `get_expense_with_participants` to fetch expense with full participant details in one call instead of two REST queries
+- **Zustand Store Integration** - extended store to cache expenses, settlements, members, and balance for active group
+- **Store-Based Expense Editing** - expense editing now uses cached store data when available, reducing API calls
+- **Member Counts in Store** - join requests and pending invitations counts stored in Zustand for efficient access
 - **Search Functionality** - search bar to filter expenses and payments by description or notes
 - **Advanced Member Filters** - filter expenses by who paid and payments by who paid/received
 - **Active Filter Badges** - visual indicators showing active filters with quick remove options
@@ -81,6 +89,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Auth Helper Functions** - utilities for debugging supabase authentication and session state
 
 ### Changed
+- **Optimized Initial Load** - reduced API calls by consolidating member, expense, and group data queries into single RPC functions
+- **Expense List Data Fetching** - now uses store data when available, only fetches counts when store has expense data
+- **Group Members List** - uses consolidated `get_group_members_summary` RPC instead of multiple separate queries
+- **Content Wrapper** - uses member counts from Zustand store instead of fetching separately
+- **Expense Editing** - checks store for complete expense data before fetching, caches fetched data for future edits
+- **Transaction Card Component** - refactored ExpenseCard and PaymentCard to use shared TransactionCard component
+- **Currency Utilities** - extracted shared currency formatting functions from ExpenseForm and SettlementForm
+- **Date Utilities** - extracted shared date formatting functions to reduce duplication
 - **Balance Summary UI** - redesigned to compact flip cards with horizontal layout (flex row)
 - **Expense Card Design** - updated to compact card with orange left border, avatars, and ellipsis truncation
 - **Payment Card Design** - updated to compact card with green left border and natural language format
@@ -117,6 +133,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **State Management** - migrated from prop drilling to Zustand store for group and member state
 
 ### Fixed
+- **Infinite Loop in ContentWrapper** - fixed maximum update depth error by using separate hooks for member counts instead of object selector
+- **Duplicate API Calls** - eliminated duplicate `get_group_transactions` calls by tracking fetch state with refs
+- **Duplicate Member Summary Calls** - removed redundant `get_group_members_summary` call from ExpensesList by using store data
+- **Race Conditions in Data Fetching** - added fetch tracking refs to prevent concurrent fetches and race conditions
+- **Store Re-render Loops** - fixed Zustand store causing infinite re-renders by stabilizing selectors and removing object creation in hooks
 - **Members Not Showing in Forms** - fixed issue where members weren't displayed when editing expenses or adding/updating payments
 - **Balance Summary Not Updating** - balance summary now refreshes correctly when expenses or payments are deleted
 - **Transaction Sorting** - fixed sorting to use created_at for expenses instead of expense_date to ensure proper chronological order
