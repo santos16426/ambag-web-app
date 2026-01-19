@@ -15,10 +15,13 @@ import type {
  * Fetch all expenses for a group
  * Use in Client Components with 'use client'
  */
-export async function getGroupExpenses(groupId: string): Promise<ExpensesQueryResult> {
+export async function getGroupExpenses(
+  groupId: string,
+  options?: { limit?: number; offset?: number }
+): Promise<ExpensesQueryResult> {
   const supabase = createClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("expenses")
     .select(`
       id,
@@ -36,14 +39,23 @@ export async function getGroupExpenses(groupId: string): Promise<ExpensesQueryRe
         avatar_url,
         email
       )
-    `)
+    `, { count: 'exact' })
     .eq("group_id", groupId)
     .order("expense_date", { ascending: false })
     .order("created_at", { ascending: false });
 
+  if (options?.limit) {
+    query = query.limit(options.limit);
+  }
+  if (options?.offset) {
+    query = query.range(options.offset, options.offset + (options.limit || 1000) - 1);
+  }
+
+  const { data, error, count } = await query;
+
   if (error) {
     console.error("Error fetching expenses:", error);
-    return { data: null, error };
+    return { data: null, count: 0, error };
   }
 
   // Fetch participants for each expense
@@ -68,7 +80,7 @@ export async function getGroupExpenses(groupId: string): Promise<ExpensesQueryRe
 
     if (participantsError) {
       console.error("Error fetching expense participants:", participantsError);
-      return { data: null, error: participantsError };
+      return { data: null, count: count || 0, error: participantsError };
     }
 
     // Map participants to expenses
@@ -110,7 +122,7 @@ export async function getGroupExpenses(groupId: string): Promise<ExpensesQueryRe
       } as Expense;
     });
 
-    return { data: expensesWithParticipants, error: null };
+    return { data: expensesWithParticipants, count: count || 0, error: null };
   }
 
   // Transform payer field for expenses without participants
@@ -130,7 +142,7 @@ export async function getGroupExpenses(groupId: string): Promise<ExpensesQueryRe
     } as Expense;
   });
 
-  return { data: transformedData, error: null };
+  return { data: transformedData, count: count || 0, error: null };
 }
 
 /**
@@ -309,6 +321,7 @@ export async function updateExpense(
   if (data.category !== undefined) updateData.category = data.category;
   if (data.expense_date !== undefined) updateData.expense_date = data.expense_date;
   if (data.amount !== undefined) updateData.amount = data.amount;
+  if (data.paid_by !== undefined) updateData.paid_by = data.paid_by;
   updateData.updated_at = new Date().toISOString();
 
   const { error: updateError } = await supabase
@@ -408,4 +421,40 @@ export async function deleteExpense(expenseId: string): Promise<{ error: Error |
   }
 
   return { error: null };
+}
+
+/**
+ * Get total transaction counts for a group (expenses, settlements, recent)
+ * Returns accurate counts from the database, not just loaded data
+ * Use in Client Components
+ */
+export async function getGroupTransactionCounts(groupId: string): Promise<{
+  data: {
+    expenses_count: number;
+    settlements_count: number;
+    total_count: number;
+    recent_count: number;
+  } | null;
+  error: Error | null;
+}> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("get_group_transaction_counts", {
+    p_group_id: groupId,
+  });
+
+  if (error) {
+    console.error("Error fetching transaction counts:", error);
+    return { data: null, error };
+  }
+
+  return {
+    data: {
+      expenses_count: data?.expenses_count || 0,
+      settlements_count: data?.settlements_count || 0,
+      total_count: data?.total_count || 0,
+      recent_count: data?.recent_count || 0,
+    },
+    error: null,
+  };
 }

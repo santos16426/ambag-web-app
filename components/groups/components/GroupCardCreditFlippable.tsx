@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Group } from "@/types/group";
 import { Users, DollarSign, Calendar, User, Share2, X, UserPlus } from "lucide-react";
+import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/utils/currency";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner"
 interface GroupCardCreditFlippableProps {
@@ -114,7 +115,7 @@ export function GroupCardCreditFlippable({ group, isActive, onClick }: GroupCard
 
                 <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full">
                   <DollarSign className="w-3 h-3" />
-                  <span className="font-medium">${totalExpenses.toFixed(0)}</span>
+                  <span className="font-medium">{formatCurrency(totalExpenses, DEFAULT_CURRENCY, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                 </div>
               </div>
             </div>
@@ -155,7 +156,7 @@ export function GroupCardCreditFlippable({ group, isActive, onClick }: GroupCard
               {/* Total Expenses */}
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center col-span-3">
                 <p className="text-[9px] opacity-75 mb-0.5">Expenses</p>
-                <p className="text-lg font-bold">${totalExpenses.toFixed(2)}</p>
+                <p className="text-lg font-bold">{formatCurrency(totalExpenses)}</p>
               </div>
 
               {/* Invite Code - spans 2 columns */}

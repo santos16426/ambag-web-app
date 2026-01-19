@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,8 +17,21 @@ import {
   User,
   ChevronDown,
   Info,
+  Trash2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { formatCurrency as formatCurrencyAmount, DEFAULT_CURRENCY } from "@/lib/utils/currency";
 import type { CreateExpenseData, UpdateExpenseData, Expense } from "@/types/expense";
 import type { GroupMember } from "@/types/group";
 import { useUserId } from "@/lib/store/userStore";
@@ -50,6 +63,7 @@ interface ExpenseFormProps {
   members: GroupMember[];
   onSubmit: (data: CreateExpenseData | UpdateExpenseData) => Promise<void>;
   onCancel?: () => void;
+  onDelete?: (expenseId: string) => void;
   variant?: "inline" | "modal"; // For reusability
   expense?: Expense; // For editing
 }
@@ -69,13 +83,14 @@ export function ExpenseForm({
   members,
   onSubmit,
   onCancel,
+  onDelete,
   expense,
 }: ExpenseFormProps) {
   const userId = useUserId();
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [amountDisplay, setAmountDisplay] = useState("");
-  const [currency, setCurrency] = useState<Currency>(CURRENCIES[0]); // Default to PHP
+  const [currency, setCurrency] = useState<Currency>(DEFAULT_CURRENCY); // Default to PHP
   const [expenseDate, setExpenseDate] = useState<string>("");
   const [paidBy, setPaidBy] = useState<string>(userId || "");
   const [splitType, setSplitType] = useState<SplitType>("equally");
@@ -90,9 +105,10 @@ export function ExpenseForm({
   const [recalculateTrigger, setRecalculateTrigger] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const expenseIdRef = useRef<string | null>(null);
 
-  // Format amount as currency
-  const formatCurrency = useCallback((value: string): string => {
+  // Format amount input as currency (for display in input field)
+  const formatCurrencyInput = useCallback((value: string): string => {
     const numericValue = value.replace(/[^\d.]/g, "");
     if (!numericValue || numericValue === ".") return "";
     const parts = numericValue.split(".");
@@ -112,10 +128,14 @@ export function ExpenseForm({
 
   // Initialize form with expense data if editing
   useEffect(() => {
-    if (expense) {
+    // Only initialize when expense ID actually changes
+    const currentExpenseId = expense?.id || null;
+    if (currentExpenseId && currentExpenseId !== expenseIdRef.current && expense) {
+      expenseIdRef.current = currentExpenseId;
+
       setDescription(expense.description);
       setAmount(expense.amount.toString());
-      setAmountDisplay(formatCurrency(expense.amount.toString()));
+      setAmountDisplay(formatCurrencyInput(expense.amount.toString()));
       setExpenseDate(expense.expense_date || new Date().toISOString().split("T")[0]);
       setPaidBy(expense.paid_by);
       setNotes(""); // Notes not stored yet
@@ -137,6 +157,8 @@ export function ExpenseForm({
           splits[p.user_id] = {
             user_id: p.user_id,
             amount_owed: p.amount_owed,
+            // Preserve exact_amount for exact split type - this is critical for editing
+            exact_amount: p.amount_owed,
           };
         });
         setMemberSplits(splits);
@@ -157,14 +179,17 @@ export function ExpenseForm({
         setMemberSplits(splits);
         setSelectedMembers(new Set());
       }
-    } else {
+    } else if (!expense) {
+      // Reset when no expense (creating new)
+      expenseIdRef.current = null;
       setExpenseDate((prev) => prev || new Date().toISOString().split("T")[0]);
     }
     // Trigger expanding animation with slight delay
     setTimeout(() => {
       setIsVisible(true);
     }, 10);
-  }, [expense, formatCurrency]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expense?.id]); // Only re-run when expense ID changes - don't include members or formatCurrencyInput to prevent resets
 
   // Handle cancel with closing animation
   const handleCancel = () => {
@@ -186,7 +211,7 @@ export function ExpenseForm({
     if (numericValue === "" || numericValue === ".") {
       setAmountDisplay("");
     } else {
-      setAmountDisplay(formatCurrency(numericValue));
+      setAmountDisplay(formatCurrencyInput(numericValue));
     }
   };
 
@@ -229,6 +254,11 @@ export function ExpenseForm({
         return prev;
       }
 
+      // Helper function to check if a field has a value (for preserving user input)
+      const hasValue = (value: number | undefined | null): boolean => {
+        return value !== undefined && value !== null && value > 0;
+      };
+
       switch (splitType) {
         case "equally": {
           const perPerson = totalAmount / selectedMemberIds.length;
@@ -243,33 +273,45 @@ export function ExpenseForm({
           break;
         }
         case "exact": {
-          // Calculate filled amounts and distribute remaining to blank fields
+          // Preserve existing exact_amount values, only auto-fill blank fields
           const filledAmounts = selectedMemberIds.reduce(
-            (sum, userId) => sum + (newSplits[userId]?.exact_amount || 0),
+            (sum, userId) => {
+              const exactAmt = newSplits[userId]?.exact_amount;
+              return sum + (hasValue(exactAmt) ? exactAmt : 0);
+            },
             0
           );
           const remaining = totalAmount - filledAmounts;
           const blankFields = selectedMemberIds.filter(
-            (userId) => !newSplits[userId]?.exact_amount || newSplits[userId].exact_amount === 0
+            (userId) => {
+              const exactAmt = newSplits[userId]?.exact_amount;
+              return !hasValue(exactAmt);
+            }
           );
-          const perBlankField = blankFields.length > 0 && remaining >= 0
-            ? remaining / blankFields.length
-            : 0;
 
           selectedMemberIds.forEach((userId) => {
             if (newSplits[userId]) {
-              const split = newSplits[userId];
-              const exactAmount = split.exact_amount || 0;
-              // If blank, use temporary value to complete the amount
-              if (exactAmount === 0 && blankFields.includes(userId)) {
+              const exactAmt = newSplits[userId].exact_amount;
+              if (hasValue(exactAmt)) {
+                // Preserve existing exact_amount
                 newSplits[userId] = {
-                  ...split,
+                  ...newSplits[userId],
+                  amount_owed: exactAmt,
+                };
+              } else if (blankFields.includes(userId) && remaining > 0 && blankFields.length > 0) {
+                // Auto-fill blank fields
+                const perBlankField = remaining / blankFields.length;
+                newSplits[userId] = {
+                  ...newSplits[userId],
+                  exact_amount: perBlankField,
                   amount_owed: perBlankField,
                 };
               } else {
+                // Keep as 0
                 newSplits[userId] = {
-                  ...split,
-                  amount_owed: exactAmount,
+                  ...newSplits[userId],
+                  exact_amount: 0,
+                  amount_owed: 0,
                 };
               }
             }
@@ -277,14 +319,20 @@ export function ExpenseForm({
           break;
         }
         case "percentage": {
-          // Calculate filled percentages and distribute remaining to blank fields
+          // Preserve existing percentage values, only auto-fill blank fields
           const filledPercentages = selectedMemberIds.reduce(
-            (sum, userId) => sum + (newSplits[userId]?.percentage || 0),
+            (sum, userId) => {
+              const pct = newSplits[userId]?.percentage;
+              return sum + (hasValue(pct) ? pct : 0);
+            },
             0
           );
           const remainingPercentage = 100 - filledPercentages;
           const blankFields = selectedMemberIds.filter(
-            (userId) => !newSplits[userId]?.percentage || newSplits[userId].percentage === 0
+            (userId) => {
+              const pct = newSplits[userId]?.percentage;
+              return !hasValue(pct);
+            }
           );
           const perBlankField = blankFields.length > 0 && remainingPercentage >= 0
             ? remainingPercentage / blankFields.length
@@ -293,23 +341,27 @@ export function ExpenseForm({
           selectedMemberIds.forEach((userId) => {
             if (newSplits[userId]) {
               const split = newSplits[userId];
-              const percentage = split.percentage || 0;
-              if (percentage === 0 && blankFields.includes(userId)) {
-                newSplits[userId] = {
-                  ...split,
-                  amount_owed: (totalAmount * perBlankField) / 100,
-                };
-              } else {
-                newSplits[userId] = {
-                  ...split,
-                  amount_owed: (totalAmount * percentage) / 100,
-                };
-              }
+              const percentage = hasValue(split.percentage) ? split.percentage! : (blankFields.includes(userId) ? perBlankField : 0);
+              newSplits[userId] = {
+                ...split,
+                percentage: percentage,
+                amount_owed: (totalAmount * percentage) / 100,
+              };
             }
           });
           break;
         }
         case "shares": {
+          // Preserve existing share values, default to 1 for blank fields
+          selectedMemberIds.forEach((userId) => {
+            if (newSplits[userId]) {
+              const shares = newSplits[userId].shares || 1;
+              newSplits[userId] = {
+                ...newSplits[userId],
+                shares: shares,
+              };
+            }
+          });
           const totalShares = selectedMemberIds.reduce(
             (sum, userId) => sum + (newSplits[userId]?.shares || 1),
             0
@@ -326,14 +378,20 @@ export function ExpenseForm({
           break;
         }
         case "adjustment": {
-          // Calculate total adjustments
+          // Preserve existing adjustment values, only auto-fill blank fields
           const totalAdjustments = selectedMemberIds.reduce(
-            (sum, userId) => sum + (newSplits[userId]?.adjustment || 0),
+            (sum, userId) => {
+              const adj = newSplits[userId]?.adjustment;
+              return sum + (hasValue(adj) ? adj : 0);
+            },
             0
           );
           const remaining = totalAmount - totalAdjustments;
           const membersWithoutAdjustment = selectedMemberIds.filter(
-            (userId) => !newSplits[userId]?.adjustment || newSplits[userId].adjustment === 0
+            (userId) => {
+              const adj = newSplits[userId]?.adjustment;
+              return !hasValue(adj);
+            }
           );
           const perRemainingMember = membersWithoutAdjustment.length > 0 && remaining >= 0
             ? remaining / membersWithoutAdjustment.length
@@ -342,8 +400,13 @@ export function ExpenseForm({
           selectedMemberIds.forEach((userId) => {
             if (newSplits[userId]) {
               const split = newSplits[userId];
-              const adjustment = split.adjustment || 0;
-              if (adjustment === 0 && membersWithoutAdjustment.includes(userId)) {
+              const adjustment = hasValue(split.adjustment) ? split.adjustment! : 0;
+              if (adjustment > 0) {
+                newSplits[userId] = {
+                  ...split,
+                  amount_owed: adjustment,
+                };
+              } else if (membersWithoutAdjustment.includes(userId)) {
                 newSplits[userId] = {
                   ...split,
                   amount_owed: perRemainingMember,
@@ -351,7 +414,7 @@ export function ExpenseForm({
               } else {
                 newSplits[userId] = {
                   ...split,
-                  amount_owed: adjustment,
+                  amount_owed: 0,
                 };
               }
             }
@@ -367,7 +430,7 @@ export function ExpenseForm({
       );
       if (Math.abs(totalOwed - totalAmount) > 0.01) {
         setValidationWarning(
-          `Total owed (${totalOwed.toFixed(2)}) doesn't match expense amount (${totalAmount.toFixed(2)})`
+          `Total owed (${formatCurrencyAmount(totalOwed)}) doesn't match expense amount (${formatCurrencyAmount(totalAmount)})`
         );
       } else {
         setValidationWarning(null);
@@ -411,7 +474,7 @@ export function ExpenseForm({
     // Validate totals
     const totalOwed = participants.reduce((sum, p) => sum + p.amount_owed, 0);
     if (Math.abs(totalOwed - totalAmount) > 0.01) {
-      setError(`Total owed (${totalOwed.toFixed(2)}) must equal expense amount (${totalAmount.toFixed(2)})`);
+      setError(`Total owed (${formatCurrencyAmount(totalOwed)}) must equal expense amount (${formatCurrencyAmount(totalAmount)})`);
       return;
     }
 
@@ -429,10 +492,6 @@ export function ExpenseForm({
 
     setIsSubmitting(true);
     try {
-      // Closing animation before submit
-      setIsClosing(true);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Wait for animation
-
       // Prepare data for create or update
       if (expense) {
         // Update expense
@@ -441,6 +500,7 @@ export function ExpenseForm({
           category: null,
           expense_date: expenseDate,
           amount: totalAmount,
+          paid_by: paidBy,
           participants,
         });
       } else {
@@ -455,6 +515,13 @@ export function ExpenseForm({
           participants,
         });
       }
+
+      // Show toast first, then start closing animation
+      await new Promise(resolve => setTimeout(resolve, 100)); // Brief delay to ensure toast is visible
+
+      // Closing animation after submit and toast
+      setIsClosing(true);
+      await new Promise(resolve => setTimeout(resolve, 500)); // Wait for animation
 
       // Reset form on success (only if creating, not editing)
       if (!expense) {
@@ -562,7 +629,7 @@ export function ExpenseForm({
                         onBlur={() => {
                           const numericValue = amount || "";
                           if (numericValue && parseFloat(numericValue) > 0) {
-                            setAmountDisplay(formatCurrency(numericValue));
+                            setAmountDisplay(formatCurrencyInput(numericValue));
                           } else {
                             setAmountDisplay("");
                           }
@@ -578,7 +645,7 @@ export function ExpenseForm({
                           const selectedCurrency = CURRENCIES.find(c => c.code === e.target.value) || CURRENCIES[0];
                           setCurrency(selectedCurrency);
                           if (amount) {
-                            setAmountDisplay(formatCurrency(amount));
+                            setAmountDisplay(formatCurrencyInput(amount));
                           }
                         }}
                         disabled={isSubmitting}
@@ -777,7 +844,7 @@ export function ExpenseForm({
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                   Participating Members
                 </label>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
+                <div className="space-y-2 max-h-48 h-full">
                   {members.map((member) => {
                     const isSelected = selectedMembers.has(member.user.id);
                     const split = memberSplits[member.user.id];
@@ -797,6 +864,21 @@ export function ExpenseForm({
                               newSelected.add(member.user.id);
                             } else {
                               newSelected.delete(member.user.id);
+                              // Clear split values when member is removed (will be redistributed)
+                              setMemberSplits((prev) => {
+                                const updated = { ...prev };
+                                if (updated[member.user.id]) {
+                                  updated[member.user.id] = {
+                                    ...updated[member.user.id],
+                                    amount_owed: 0,
+                                    exact_amount: 0,
+                                    percentage: 0,
+                                    shares: splitType === "shares" ? 1 : 0,
+                                    adjustment: 0,
+                                  };
+                                }
+                                return updated;
+                              });
                             }
                             setSelectedMembers(newSelected);
                             setRecalculateTrigger((prev) => prev + 1);
@@ -824,7 +906,9 @@ export function ExpenseForm({
                             placeholder="0.00"
                             value={split?.exact_amount || ""}
                             onChange={(e) => {
-                              const value = parseFloat(e.target.value) || 0;
+                              const inputValue = e.target.value;
+                              // Treat empty string as 0 (blank field)
+                              const value = inputValue === "" ? 0 : (parseFloat(inputValue) || 0);
                               setMemberSplits((prev) => ({
                                 ...prev,
                                 [member.user.id]: {
@@ -848,7 +932,9 @@ export function ExpenseForm({
                               placeholder="0%"
                               value={split?.percentage || ""}
                               onChange={(e) => {
-                                const value = parseFloat(e.target.value) || 0;
+                                const inputValue = e.target.value;
+                                // Treat empty string as 0 (blank field)
+                                const value = inputValue === "" ? 0 : (parseFloat(inputValue) || 0);
                                 setMemberSplits((prev) => ({
                                   ...prev,
                                   [member.user.id]: {
@@ -873,7 +959,9 @@ export function ExpenseForm({
                               placeholder="1"
                               value={split?.shares || 1}
                               onChange={(e) => {
-                                const value = parseInt(e.target.value) || 1;
+                                const inputValue = e.target.value;
+                                // Treat empty string as 1 (minimum share)
+                                const value = inputValue === "" ? 1 : (parseInt(inputValue) || 1);
                                 setMemberSplits((prev) => ({
                                   ...prev,
                                   [member.user.id]: {
@@ -897,25 +985,27 @@ export function ExpenseForm({
                             step="0.01"
                             min="0"
                             placeholder="0.00"
-                            value={split?.adjustment || ""}
-                            onChange={(e) => {
-                              const value = parseFloat(e.target.value) || 0;
-                              setMemberSplits((prev) => ({
-                                ...prev,
-                                [member.user.id]: {
-                                  ...prev[member.user.id],
-                                  adjustment: value,
-                                },
-                              }));
-                              setRecalculateTrigger((prev) => prev + 1);
-                            }}
+                              value={split?.adjustment || ""}
+                              onChange={(e) => {
+                                const inputValue = e.target.value;
+                                // Treat empty string as 0 (blank field)
+                                const value = inputValue === "" ? 0 : (parseFloat(inputValue) || 0);
+                                setMemberSplits((prev) => ({
+                                  ...prev,
+                                  [member.user.id]: {
+                                    ...prev[member.user.id],
+                                    adjustment: value,
+                                  },
+                                }));
+                                setRecalculateTrigger((prev) => prev + 1);
+                              }}
                             disabled={isSubmitting}
                             className="h-8 text-xs w-24 shrink-0"
                           />
                         )}
 
                         <div className="text-sm font-medium min-w-[60px] text-right shrink-0">
-                          ${amountOwed.toFixed(2)}
+                          {formatCurrencyAmount(amountOwed)}
                         </div>
                       </div>
                     );
@@ -951,29 +1041,74 @@ export function ExpenseForm({
       </div>
 
       {/* Form Actions */}
-      <div className="flex items-center justify-end gap-2 pt-2">
-        {onCancel && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={handleCancel}
-            disabled={isSubmitting}
-            size="sm"
-            className="transition-all duration-200 hover:scale-105"
-          >
-            Cancel
-          </Button>
-        )}
-        <Button type="submit" disabled={isSubmitting} size="sm" className="transition-all duration-200 hover:scale-105">
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-              {expense ? "Updating" : "Saving"}
-            </>
-          ) : (
-            expense ? "Update" : "Save"
+      <div className="flex items-center justify-between pt-2">
+        <div>
+          {expense && onDelete && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={isSubmitting}
+                  size="sm"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Expense?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this expense? This action cannot be undone.
+                    All payment records associated with this expense will also be removed.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel asChild>
+                    <Button variant="outline">Cancel</Button>
+                  </AlertDialogCancel>
+                  <AlertDialogAction asChild>
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        onDelete(expense.id);
+                        onCancel?.();
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
-        </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          {onCancel && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+              size="sm"
+              className="transition-all duration-200 hover:scale-105"
+            >
+              Cancel
+            </Button>
+          )}
+          <Button type="submit" disabled={isSubmitting} size="sm" className="transition-all duration-200 hover:scale-105">
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                {expense ? "Updating" : "Saving"}
+              </>
+            ) : (
+              expense ? "Update" : "Save"
+            )}
+          </Button>
+        </div>
       </div>
     </form>
   );

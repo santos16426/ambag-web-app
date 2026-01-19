@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useGroups } from "@/lib/store/groupStore";
 import { useUserId } from "@/lib/store/userStore";
 import { createClient } from "@/lib/supabase/client";
+import { getUserTotalBalance } from "@/lib/supabase/queries/balances";
 import {
   BarChart,
   Bar,
@@ -196,8 +197,18 @@ export function Overview() {
         // Recent expenses (last 5)
         const recentExpenses = expensesData.slice(0, 5);
 
-        // Calculate total balance (simplified - would need balance calculation)
-        const totalBalance = 0; // TODO: Calculate from balances
+        // Calculate total balance using server-side function
+        let totalBalance = 0;
+        try {
+          const balanceResult = await getUserTotalBalance(userId);
+          if (balanceResult.error) {
+            console.error("Error fetching total balance:", balanceResult.error);
+          } else {
+            totalBalance = balanceResult.data || 0;
+          }
+        } catch (error) {
+          console.error("Error calculating total balance:", error);
+        }
 
         setStats({
           totalExpenses,

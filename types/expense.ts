@@ -62,6 +62,7 @@ export type UpdateExpenseData = {
   category?: ExpenseCategory | null;
   expense_date?: string;
   amount?: number;
+  paid_by?: string;
   participants?: {
     user_id: string;
     amount_owed: number;
@@ -70,6 +71,7 @@ export type UpdateExpenseData = {
 
 export type ExpensesQueryResult = {
   data: Expense[] | null;
+  count?: number; // Total count from database
   error: Error | null;
 };
 

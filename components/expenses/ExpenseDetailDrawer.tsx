@@ -12,6 +12,17 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   DollarSign,
   Calendar,
   User,
@@ -20,10 +31,12 @@ import {
   Edit,
   Tag,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import type { Expense, ExpenseParticipant } from "@/types/expense";
 import type { GroupMember } from "@/types/group";
 import { updateParticipantPayment, updateExpense } from "@/lib/supabase/queries/expenses";
+import { formatCurrency } from "@/lib/utils/currency";
 import { toast } from "sonner";
 import { useUserId } from "@/lib/store/userStore";
 import { ExpenseForm } from "./ExpenseForm";
@@ -35,6 +48,7 @@ interface ExpenseDetailDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onExpenseUpdate?: () => void;
+  onDelete?: (expenseId: string) => void;
 }
 
 export function ExpenseDetailDrawer({
@@ -44,6 +58,7 @@ export function ExpenseDetailDrawer({
   open,
   onOpenChange,
   onExpenseUpdate,
+  onDelete,
 }: ExpenseDetailDrawerProps) {
   const userId = useUserId();
   const [isEditing, setIsEditing] = useState(false);
@@ -198,7 +213,7 @@ export function ExpenseDetailDrawer({
                 <DollarSign className="w-5 h-5 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Amount</span>
               </div>
-              <span className="text-2xl font-bold">${expense.amount.toFixed(2)}</span>
+              <span className="text-2xl font-bold">{formatCurrency(expense.amount)}</span>
             </div>
 
             {expense.category && (
@@ -247,16 +262,16 @@ export function ExpenseDetailDrawer({
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Total Owed</span>
-              <span className="font-medium">${totalOwed.toFixed(2)}</span>
+              <span className="font-medium">{formatCurrency(totalOwed)}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Total Paid</span>
-              <span className="font-medium">${totalPaid.toFixed(2)}</span>
+              <span className="font-medium">{formatCurrency(totalPaid)}</span>
             </div>
             <div className="flex items-center justify-between text-sm mt-2 pt-2 border-t border-border">
               <span className="text-muted-foreground">Remaining</span>
               <span className={`font-medium ${totalOwed - totalPaid > 0.01 ? "text-orange-600 dark:text-orange-400" : "text-green-600 dark:text-green-400"}`}>
-                ${(totalOwed - totalPaid).toFixed(2)}
+                {formatCurrency(totalOwed - totalPaid)}
               </span>
             </div>
           </div>
@@ -265,16 +280,59 @@ export function ExpenseDetailDrawer({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold">Participants & Payments</h3>
-              {canEdit && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditing(true)}
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Expense
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {canEdit && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Expense
+                  </Button>
+                )}
+                {onDelete && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Expense?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this expense? This action cannot be undone.
+                          All payment records associated with this expense will also be removed.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel asChild>
+                          <Button variant="outline">Cancel</Button>
+                        </AlertDialogCancel>
+                        <AlertDialogAction asChild>
+                          <Button
+                            variant="destructive"
+                            onClick={() => {
+                              if (expense) {
+                                onDelete(expense.id);
+                                onOpenChange(false);
+                              }
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -316,7 +374,7 @@ export function ExpenseDetailDrawer({
                             )}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            Owed: ${participant.amount_owed.toFixed(2)}
+                            Owed: {formatCurrency(participant.amount_owed)}
                           </div>
                         </div>
                       </div>
@@ -340,7 +398,7 @@ export function ExpenseDetailDrawer({
                           className="h-8"
                           placeholder="0.00"
                         />
-                        <span className="text-xs text-muted-foreground">/ ${participant.amount_owed.toFixed(2)}</span>
+                        <span className="text-xs text-muted-foreground">/ {formatCurrency(participant.amount_owed)}</span>
                       </div>
                     )}
                   </div>
