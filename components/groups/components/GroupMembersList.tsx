@@ -404,46 +404,20 @@ export function GroupMembersList() {
   }
 
   return (
-    <div className="space-y-6 pt-8 border-t border-border">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h3 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="w-6 h-6" />
-            Members
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {members.length} {members.length === 1 ? "member" : "members"}
-            {joinRequests.length > 0 && (
-              <span className="ml-2">
-                • {joinRequests.length} pending{" "}
-                {joinRequests.length === 1 ? "request" : "requests"}
-              </span>
-            )}
-            {pendingInvitations.length > 0 && (
-              <span className="ml-2">
-                • {pendingInvitations.length} {pendingInvitations.length === 1 ? "invitation" : "invitations"} not yet accepted
-              </span>
-            )}
-          </p>
-        </div>
-
-      </div>
-
+    <div className="space-y-6">
       {/* All Members - Combined View */}
-      <div className="space-y-4">
-        <h4 className="text-sm font-semibold text-muted-foreground">
-          Members
-        </h4>
-        {members.length === 0 && joinRequests.length === 0 && pendingInvitations.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>No members yet</p>
-          </div>
-        ) : (
-          <div className={`flex flex-wrap gap-3 ${showCards ? 'animate-slide-in-from-right' : ''}`}>
-            {/* Current Members */}
-            {members.map((member) => {
+      <div className="space-y-6">
+        {/* Active Members Section */}
+        <div className="space-y-4">
+          {members.length === 0 && joinRequests.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p>No members yet</p>
+            </div>
+          ) : (
+            <div className={`flex flex-wrap gap-3 ${showCards ? 'animate-slide-in-from-right' : ''}`}>
+              {/* Current Members */}
+              {members.map((member) => {
               const isCurrentUser = member.user.id === userId;
               const isOwner = activeGroup?.created_by === member.user.id;
               const canRemove =
@@ -456,9 +430,9 @@ export function GroupMembersList() {
               return (
                 <div
                   key={member.id}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-white dark:bg-card border border-border shadow-sm hover:shadow-lg hover:-rotate-3 transition-all"
+                  className="flex items-center gap-3 px-4 py-2.5 h-16 rounded-full bg-white dark:bg-card border border-border shadow-sm hover:shadow-lg hover:-rotate-3 transition-all"
                 >
-                  <div className="relative">
+                  <div className="relative shrink-0">
                     <Avatar className="w-10 h-10">
                       <AvatarImage
                         src={member.user.avatar_url || undefined}
@@ -475,18 +449,18 @@ export function GroupMembersList() {
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-sm">
+                  <div className="flex flex-col justify-center gap-0.5 min-w-0 flex-1">
+                    <div className="flex items-center gap-2 min-h-[20px]">
+                      <p className="font-semibold text-sm truncate">
                         {member.user.full_name || "User"}
                       </p>
                       {isCurrentUser && (
-                        <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full">
+                        <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full shrink-0">
                           You
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground truncate">
                       {member.user.email}
                     </p>
                   </div>
@@ -541,9 +515,9 @@ export function GroupMembersList() {
             {joinRequests.map((request) => (
               <div
                 key={request.id}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-white dark:bg-card border border-border shadow-sm hover:shadow-lg hover:-rotate-3 transition-all"
+                className="flex items-center gap-3 px-4 py-2.5 h-16 rounded-full bg-white dark:bg-card border border-border shadow-sm hover:shadow-lg hover:-rotate-3 transition-all"
               >
-                <Avatar className="w-10 h-10">
+                <Avatar className="w-10 h-10 shrink-0">
                   <AvatarImage
                     src={request.user.avatar_url || undefined}
                     alt={request.user.full_name || request.user.email}
@@ -553,16 +527,18 @@ export function GroupMembersList() {
                       request.user.email.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col gap-1">
-                  <p className="font-semibold text-sm">
-                    {request.user.full_name || "User"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
+                <div className="flex flex-col justify-center gap-0.5 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 min-h-[20px]">
+                    <p className="font-semibold text-sm truncate">
+                      {request.user.full_name || "User"}
+                    </p>
+                    <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-full shrink-0">
+                      Pending
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">
                     {request.user.email}
                   </p>
-                  <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-full w-fit">
-                    Pending
-                  </span>
                 </div>
                 {isAdmin && (
                   <div className="flex items-center gap-1 ml-2">
@@ -654,80 +630,22 @@ export function GroupMembersList() {
               </div>
             ))}
 
-            {/* Pending Invitations */}
-            {pendingInvitations.map((invitation) => (
-              <div
-                key={invitation.id}
-                className="group relative flex items-center gap-3 px-4 py-2.5 rounded-full bg-white dark:bg-card border border-border border-dashed shadow-sm hover:shadow-lg hover:-rotate-3 transition-all"
-              >
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-muted-foreground/30">
-                  <Mail className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <div className="flex flex-col gap-1 flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">
-                    {invitation.email}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Invitation sent
-                  </p>
-                  <span className="px-2 py-0.5 text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full w-fit">
-                    Not Accepted
-                  </span>
-                </div>
-                {isAdmin && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full ml-2"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Cancel Invitation?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to cancel the invitation to{" "}
-                          <strong>{invitation.email}</strong>? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel asChild>
-                          <Button variant="outline">Cancel</Button>
-                        </AlertDialogCancel>
-                        <AlertDialogAction asChild>
-                          <Button
-                            variant="destructive"
-                            onClick={() => handleCancelInvitation(invitation.id, invitation.email)}
-                          >
-                            Cancel Invitation
-                          </Button>
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
-              </div>
-            ))}
-
             {/* Add Member Button */}
-            {isAdmin && (
-              <Drawer open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
-                <DrawerTrigger asChild>
-                  <button
-                    className="group flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-dashed border-muted-foreground/30 bg-muted/50 hover:bg-muted hover:border-muted-foreground/50 transition-all hover:shadow-md"
-                    aria-label="Add member"
-                  >
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background">
-                      <UserPlus className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                    </div>
-                    <span className="font-semibold text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                      Add Member
-                    </span>
-                  </button>
-                </DrawerTrigger>
+              {isAdmin && (
+                <Drawer open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+                  <DrawerTrigger asChild>
+                    <button
+                      className="group flex items-center gap-2 px-4 py-2.5 h-16 rounded-full border-2 border-dashed border-muted-foreground/30 bg-muted/50 hover:bg-muted hover:border-muted-foreground/50 transition-all hover:shadow-md"
+                      aria-label="Add member"
+                    >
+                      <div className="flex items-center justify-center w-10 h-10 shrink-0 rounded-full bg-background">
+                        <UserPlus className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                      </div>
+                      <span className="font-semibold text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                        Add Member
+                      </span>
+                    </button>
+                  </DrawerTrigger>
                 <DrawerContent className="min-h-[40vh]">
                   <div className="mx-auto w-full max-w-md p-6">
                     <DrawerTitle className="text-2xl font-bold mb-6">
@@ -762,7 +680,77 @@ export function GroupMembersList() {
                   </div>
                 </DrawerContent>
               </Drawer>
-            )}
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Pending Invitations Section */}
+        {pendingInvitations.length > 0 && (
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-muted-foreground">
+              Pending Invitations
+            </h4>
+            <div className={`flex flex-wrap gap-3 ${showCards ? 'animate-slide-in-from-right' : ''}`}>
+              {pendingInvitations.map((invitation) => (
+                <div
+                  key={invitation.id}
+                  className="group relative flex items-center gap-3 px-4 py-2.5 h-16 rounded-full bg-white dark:bg-card border border-border border-dashed shadow-sm hover:shadow-lg hover:-rotate-3 transition-all"
+                >
+                  <div className="relative shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-muted-foreground/30">
+                      <Mail className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 bg-orange-400 dark:bg-orange-500 rounded-full p-0.5 shadow-sm">
+                      <Mail className="w-3 h-3 text-orange-900 dark:text-orange-950" fill="currentColor" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col justify-center gap-0.5 flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">
+                      {invitation.email}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      Invitation sent
+                    </p>
+                  </div>
+                  {isAdmin && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full ml-2"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Cancel Invitation?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to cancel the invitation to{" "}
+                            <strong>{invitation.email}</strong>? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel asChild>
+                            <Button variant="outline">Cancel</Button>
+                          </AlertDialogCancel>
+                          <AlertDialogAction asChild>
+                            <Button
+                              variant="destructive"
+                              onClick={() => handleCancelInvitation(invitation.id, invitation.email)}
+                            >
+                              Cancel Invitation
+                            </Button>
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

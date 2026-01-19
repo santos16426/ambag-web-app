@@ -335,21 +335,7 @@ export function GroupsList() {
   return (
     <div className="space-y-8 max-w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-foreground">
-            My Groups
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {groups.length} {groups.length === 1 ? 'group' : 'groups'}
-            {USE_MOCK_DATA && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-full">
-                MOCK DATA
-              </span>
-            )}
-          </p>
-        </div>
-
+      <div className="flex items-center justify-end flex-wrap gap-4">
         <div className="flex items-center gap-3">
           {/* Join Group button with drawer */}
           <Drawer open={isJoinDrawerOpen} onOpenChange={setIsJoinDrawerOpen}>
@@ -379,7 +365,7 @@ export function GroupsList() {
             <DrawerTrigger asChild>
               <Button
                 size="sm"
-                className="gap-2 bg-linear-to-r from-purple-600 via-90% to-purple-500 hover:from-purple-700 hover:to-purple-700 text-white dark:text-white"
+                className="gap-2 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-500 hover:from-purple-700 hover:via-purple-600 hover:to-purple-600 text-white dark:text-white"
               >
                 <Plus className="w-4 h-4" />
                 New Group

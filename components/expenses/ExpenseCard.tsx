@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DollarSign, Calendar, User } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { DollarSign, Calendar, User, Receipt } from "lucide-react";
+import { formatCurrency } from "@/lib/utils/currency";
 import type { Expense } from "@/types/expense";
 
 interface ExpenseCardProps {
@@ -62,107 +64,134 @@ export function ExpenseCard({ expense, currentUserId, onEdit, viewMode = "card" 
   if (viewMode === "list") {
     return (
       <div
-        className="group relative p-2.5 rounded-md border border-border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+        className="group relative p-2 rounded-md border border-border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
         onClick={() => onEdit?.(expense)}
       >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h4 className="font-medium text-sm truncate">{expense.description}</h4>
-                {expense.category && (
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${categoryColor}`}>
-                    {expense.category}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <DollarSign className="w-3 h-3" />
-                  <span className="font-medium">${expense.amount.toFixed(2)}</span>
-                </span>
-                <span className="flex items-center gap-1">
-                  <User className="w-3 h-3" />
-                  <span className="truncate">{payer?.full_name || payer?.email || "Unknown"}</span>
-                </span>
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  <span>{expenseDate}</span>
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
-              {totalParticipants} {totalParticipants === 1 ? "person" : "people"}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-1 min-w-0 border-l-4 border-l-orange-500 dark:border-l-orange-400 pl-2">
+            {expense.category && (
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${categoryColor} shrink-0`}>
+                {expense.category}
+              </span>
+            )}
+            <span className="text-xs text-muted-foreground flex items-center gap-1.5 min-w-0 flex-1">
+              <Avatar className="w-5 h-5 shrink-0">
+                <AvatarImage src={payer?.avatar_url || undefined} />
+                <AvatarFallback className="text-[10px]">
+                  {payer?.full_name?.[0]?.toUpperCase() || payer?.email[0]?.toUpperCase() || "?"}
+                </AvatarFallback>
+              </Avatar>
+              <span className="truncate">{payer?.full_name || payer?.email || "Unknown"}</span>
+              <span className="shrink-0">paid for</span>
+              <span className="truncate">{expense.description}</span>
             </span>
+            {expense.category && (
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${categoryColor} shrink-0`}>
+                {expense.category}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs font-semibold">{formatCurrency(expense.amount)}</span>
+            {expenseDate && (
+              <span className="text-[10px] text-muted-foreground">{expenseDate}</span>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
-  // Card view - compact card layout with constrained width
+  // Card view - compact card layout
   return (
     <div
-      className="group relative p-4 rounded-lg border border-border bg-card hover:bg-accent/50 hover:shadow-md transition-all cursor-pointer h-full"
+      className="group relative p-2.5 rounded-md border border-border bg-card hover:bg-accent/50 hover:shadow-sm transition-all cursor-pointer border-l-4 border-l-orange-500 dark:border-l-orange-400"
       onClick={() => onEdit?.(expense)}
     >
-      <div className="space-y-3">
-        <div>
-          <h4 className="font-semibold text-sm mb-1.5 line-clamp-2">{expense.description}</h4>
-          <div className="flex items-center gap-2">
-            <span className="text-base font-bold">${expense.amount.toFixed(2)}</span>
+      <div className="space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
             {expense.category && (
-              <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${categoryColor}`}>
-                {expense.category}
-              </span>
+              <div className="mb-1">
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${categoryColor}`}>
+                  {expense.category}
+                </span>
+              </div>
             )}
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5 min-w-0">
+              <Avatar className="w-5 h-5 shrink-0">
+                <AvatarImage src={payer?.avatar_url || undefined} />
+                <AvatarFallback className="text-[10px]">
+                  {payer?.full_name?.[0]?.toUpperCase() || payer?.email[0]?.toUpperCase() || "?"}
+                </AvatarFallback>
+              </Avatar>
+              <span className="font-medium truncate">{payer?.full_name || payer?.email || "Unknown"}</span>
+              <span className="shrink-0">{" paid for "}</span>
+              <span className="font-medium truncate">{expense.description}</span>
+            </p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-sm font-bold">{formatCurrency(expense.amount)}</p>
           </div>
         </div>
 
-        <div className="space-y-2 pt-2 border-t border-border">
-          <div className="flex items-center gap-2 text-xs">
-            <User className="w-3.5 h-3.5 text-muted-foreground" />
-            <Avatar className="w-5 h-5">
-              <AvatarImage src={payer?.avatar_url || undefined} />
-              <AvatarFallback className="text-[10px]">
-                {payer?.full_name?.[0]?.toUpperCase() || payer?.email[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-muted-foreground truncate">
-              {payer?.full_name || payer?.email || "Unknown"}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Calendar className="w-3.5 h-3.5" />
-            <span>{expenseDate}</span>
-            {totalParticipants > 0 && (
+        <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground pt-1 border-t border-border">
+          <div className="flex items-center gap-2">
+            {expenseDate && (
+              <>
+                <Calendar className="w-3 h-3" />
+                <span>{expenseDate}</span>
+              </>
+            )}
+            {totalParticipants > 0 && expenseDate && (
               <>
                 <span>•</span>
-                <div className="flex items-center gap-2">
-                  <div className="flex -space-x-2">
-                    {participants.slice(0, 3).map((participant) => (
-                      <Avatar key={participant.id} className="w-5 h-5 border-2 border-background">
+                <span>{totalParticipants} {totalParticipants === 1 ? "person" : "people"}</span>
+              </>
+            )}
+          </div>
+          {totalParticipants > 0 && (
+            <div className="flex -space-x-1.5 shrink-0">
+              {participants.slice(0, 3).map((participant) => {
+                const participantName = participant.user?.full_name || participant.user?.email || "Unknown";
+                return (
+                  <Tooltip key={participant.id}>
+                    <TooltipTrigger asChild>
+                      <Avatar className="w-5 h-5 border-2 border-background cursor-pointer">
                         <AvatarImage src={participant.user?.avatar_url || undefined} />
-                        <AvatarFallback className="text-[10px]">
+                        <AvatarFallback className="text-[9px]">
                           {participant.user?.full_name?.[0]?.toUpperCase() ||
                             participant.user?.email[0]?.toUpperCase() ||
                             "?"}
                         </AvatarFallback>
                       </Avatar>
-                    ))}
-                    {totalParticipants > 3 && (
-                      <div className="w-5 h-5 rounded-full border-2 border-background bg-muted flex items-center justify-center text-[10px] font-medium">
-                        +{totalParticipants - 3}
-                      </div>
-                    )}
-                  </div>
-                  <span>{totalParticipants} {totalParticipants === 1 ? "person" : "people"}</span>
-                </div>
-              </>
-            )}
-          </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>{participantName}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+              {totalParticipants > 3 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="w-5 h-5 rounded-full border-2 border-background bg-muted flex items-center justify-center text-[9px] font-medium cursor-pointer">
+                      +{totalParticipants - 3}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <div className="space-y-1">
+                      {participants.slice(3).map((participant) => (
+                        <p key={participant.id} className="text-xs">
+                          {participant.user?.full_name || participant.user?.email || "Unknown"}
+                        </p>
+                      ))}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

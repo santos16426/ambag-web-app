@@ -123,7 +123,7 @@ export default async function Home() {
               </div>
 
               {/* Right Side - Bill Mockup */}
-              <div className='relative w-screen h-full flex flex-row overlow-y-hidden gap-10'>
+              <div className='relative w-screen h-full flex flex-row overflow-y-hidden gap-10'>
                 <BillSplittingMockup
                   variant='receipt'
                   data={{

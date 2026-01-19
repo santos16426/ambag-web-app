@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Search Functionality** - search bar to filter expenses and payments by description or notes
+- **Advanced Member Filters** - filter expenses by who paid and payments by who paid/received
+- **Active Filter Badges** - visual indicators showing active filters with quick remove options
+- **Balance Summary Flip Cards** - interactive flip card animation showing total on front and detailed breakdown on back
+- **Horizontal Balance Layout** - balance summary cards displayed side-by-side in flex row layout
+- **Transaction Sorting** - unified chronological sorting for expenses and payments using created_at timestamps
+- **Settlement/Payment System** - complete payment tracking system with settlements table and CRUD operations
+- **Combined Transaction Queries** - single database function to fetch expenses and settlements with counts
+- **Server-Side Balance Calculation** - Supabase functions for accurate balance calculations with mutual debt netting
+- **Currency Utilities** - currency formatting and conversion utilities with multi-currency support
 - **Expense Balance Calculation** - utility functions to calculate balances between group members (who owes whom)
 - **Balance Summary Card** - unified card showing "You Owe" and "You're Owed" with complete member breakdowns
 - **Expense Editing** - click any expense card to edit inline using the same form component
@@ -71,6 +81,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Auth Helper Functions** - utilities for debugging supabase authentication and session state
 
 ### Changed
+- **Balance Summary UI** - redesigned to compact flip cards with horizontal layout (flex row)
+- **Expense Card Design** - updated to compact card with orange left border, avatars, and ellipsis truncation
+- **Payment Card Design** - updated to compact card with green left border and natural language format
+- **Transaction List Sorting** - expenses and payments now sorted together chronologically by created_at/settled_at
+- **Filter UI** - moved search bar inline with filter tabs for compact design
+- **Balance Summary Update** - automatically refreshes when expenses or payments are added/updated/deleted
 - **Expense Form Component** - renamed from CreateExpenseForm to ExpenseForm for better reusability
 - **Expense Card Layout** - redesigned to compact card view with grid layout (1/2/3 columns responsive)
 - **Expense List Layout** - form now appears below expenses list for better UX flow
@@ -101,6 +117,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **State Management** - migrated from prop drilling to Zustand store for group and member state
 
 ### Fixed
+- **Members Not Showing in Forms** - fixed issue where members weren't displayed when editing expenses or adding/updating payments
+- **Balance Summary Not Updating** - balance summary now refreshes correctly when expenses or payments are deleted
+- **Transaction Sorting** - fixed sorting to use created_at for expenses instead of expense_date to ensure proper chronological order
+- **Transaction Count Inconsistency** - fixed count changing when switching between filter tabs by using stable count state
+- **Balance Summary Layout** - fixed overlapping issue when balance list is too long by adding proper scrollable container
+- **Expense Card Truncation** - added ellipsis truncation to prevent layout breaking with long descriptions
+- **TypeScript Errors** - fixed type safety issues in ExpenseForm and ContentWrapper components
 - **Expense Editing Selected Members** - fixed issue where all members were selected instead of only participants when editing
 - **Hydration Mismatch** - fixed date formatting to prevent server/client rendering differences
 - **TypeScript Errors** - fixed missing variable references and type issues in ExpenseForm

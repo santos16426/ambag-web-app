@@ -28,3 +28,12 @@ export type {
   ExpensesQueryResult,
   ExpenseQueryResult,
 } from './expense'
+
+// Settlement types
+export type {
+  Settlement,
+  CreateSettlementData,
+  UpdateSettlementData,
+  SettlementQueryResult,
+  SettlementsQueryResult,
+} from './settlement'
