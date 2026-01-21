@@ -14,7 +14,6 @@ import {
   Percent,
   Share2,
   SlidersHorizontal,
-  User,
   ChevronDown,
   Info,
   Trash2,
@@ -241,7 +240,8 @@ export function ExpenseForm({
           break;
         }
         case "exact": {
-          // Preserve existing exact_amount values, only auto-fill blank fields
+          // Preserve existing exact_amount values (user input), but keep fields visually empty
+          // Auto-computed shares only affect amount_owed, not the exact_amount field
           const filledAmounts = selectedMemberIds.reduce(
             (sum, userId) => {
               const exactAmt = newSplits[userId]?.exact_amount;
@@ -250,44 +250,43 @@ export function ExpenseForm({
             0
           );
           const remaining = totalAmount - filledAmounts;
-          const blankFields = selectedMemberIds.filter(
-            (userId) => {
-              const exactAmt = newSplits[userId]?.exact_amount;
-              return !hasValue(exactAmt);
-            }
-          );
+          const blankFields = selectedMemberIds.filter((userId) => {
+            const exactAmt = newSplits[userId]?.exact_amount;
+            return !hasValue(exactAmt);
+          });
+
+          const perBlankField =
+            blankFields.length > 0 && remaining > 0 ? remaining / blankFields.length : 0;
 
           selectedMemberIds.forEach((userId) => {
-            if (newSplits[userId]) {
-              const exactAmt = newSplits[userId].exact_amount;
-              if (hasValue(exactAmt)) {
-                // Preserve existing exact_amount
-                newSplits[userId] = {
-                  ...newSplits[userId],
-                  amount_owed: exactAmt,
-                };
-              } else if (blankFields.includes(userId) && remaining > 0 && blankFields.length > 0) {
-                // Auto-fill blank fields
-                const perBlankField = remaining / blankFields.length;
-                newSplits[userId] = {
-                  ...newSplits[userId],
-                  exact_amount: perBlankField,
-                  amount_owed: perBlankField,
-                };
-              } else {
-                // Keep as 0
-                newSplits[userId] = {
-                  ...newSplits[userId],
-                  exact_amount: 0,
-                  amount_owed: 0,
-                };
-              }
+            if (!newSplits[userId]) return;
+
+            const exactAmt = newSplits[userId].exact_amount;
+            if (hasValue(exactAmt)) {
+              // User-provided value: use it directly
+              newSplits[userId] = {
+                ...newSplits[userId],
+                amount_owed: exactAmt,
+              };
+            } else if (blankFields.includes(userId) && perBlankField > 0) {
+              // Auto-computed share for blank fields: update only amount_owed
+              newSplits[userId] = {
+                ...newSplits[userId],
+                amount_owed: perBlankField,
+              };
+            } else {
+              newSplits[userId] = {
+                ...newSplits[userId],
+                amount_owed: 0,
+              };
             }
           });
           break;
         }
         case "percentage": {
-          // Preserve existing percentage values, only auto-fill blank fields
+          // Preserve existing percentage values (user input);
+          // for blank fields, compute an implicit percentage but don't store it,
+          // so inputs stay visually empty.
           const filledPercentages = selectedMemberIds.reduce(
             (sum, userId) => {
               const pct = newSplits[userId]?.percentage;
@@ -296,26 +295,32 @@ export function ExpenseForm({
             0
           );
           const remainingPercentage = 100 - filledPercentages;
-          const blankFields = selectedMemberIds.filter(
-            (userId) => {
-              const pct = newSplits[userId]?.percentage;
-              return !hasValue(pct);
-            }
-          );
-          const perBlankField = blankFields.length > 0 && remainingPercentage >= 0
-            ? remainingPercentage / blankFields.length
-            : 0;
+          const blankFields = selectedMemberIds.filter((userId) => {
+            const pct = newSplits[userId]?.percentage;
+            return !hasValue(pct);
+          });
+
+          const perBlankField =
+            blankFields.length > 0 && remainingPercentage >= 0
+              ? remainingPercentage / blankFields.length
+              : 0;
 
           selectedMemberIds.forEach((userId) => {
-            if (newSplits[userId]) {
-              const split = newSplits[userId];
-              const percentage = hasValue(split.percentage) ? split.percentage! : (blankFields.includes(userId) ? perBlankField : 0);
-              newSplits[userId] = {
-                ...split,
-                percentage: percentage,
-                amount_owed: (totalAmount * percentage) / 100,
-              };
-            }
+            if (!newSplits[userId]) return;
+
+            const split = newSplits[userId];
+            const hasUserPct = hasValue(split.percentage);
+            const effectivePct = hasUserPct
+              ? split.percentage!
+              : blankFields.includes(userId)
+              ? perBlankField
+              : 0;
+
+            newSplits[userId] = {
+              ...split,
+              // keep split.percentage as-is so blank fields stay visually empty
+              amount_owed: (totalAmount * effectivePct) / 100,
+            };
           });
           break;
         }
@@ -812,7 +817,7 @@ export function ExpenseForm({
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                   Participating Members
                 </label>
-                <div className="space-y-2 max-h-48 h-full">
+                <div className="space-y-2 h-full">
                   {members.map((member) => {
                     const isSelected = selectedMembers.has(member.user.id);
                     const split = memberSplits[member.user.id];
@@ -979,14 +984,37 @@ export function ExpenseForm({
                     );
                   })}
                 </div>
+              </div>
+ {/* Percentage total validation and validation warning - below participating members */}
+              <div className="space-y-2 mt-3">
                 {/* Percentage total validation */}
                 {splitType === "percentage" && (() => {
-                  const totalPercentage = Array.from(selectedMembers).reduce(
-                    (sum, id) => sum + (memberSplits[id]?.percentage || 0),
-                    0
-                  );
+                  const selectedIds = Array.from(selectedMembers);
+
+                  // Same logic as in the recalculation: explicit percentages + implied for blanks
+                  const hasValue = (value: number | undefined | null): boolean =>
+                    value !== undefined && value !== null && value > 0;
+
+                  const filledPercentages = selectedIds.reduce((sum, id) => {
+                    const pct = memberSplits[id]?.percentage;
+                    return sum + (hasValue(pct) ? pct! : 0);
+                  }, 0);
+
+                  const remainingPercentage = 100 - filledPercentages;
+                  const blankFields = selectedIds.filter((id) => {
+                    const pct = memberSplits[id]?.percentage;
+                    return !hasValue(pct);
+                  });
+
+                  const impliedTotal =
+                    blankFields.length > 0 && remainingPercentage >= 0
+                      ? remainingPercentage
+                      : 0;
+
+                  const totalPercentage = filledPercentages + impliedTotal;
+
                   return (
-                    <div className="text-xs text-muted-foreground pt-2 mt-2 border-t border-border">
+                    <div className="text-xs text-muted-foreground pt-2 border-t border-border">
                       Total: {totalPercentage.toFixed(1)}%
                       {Math.abs(totalPercentage - 100) > 0.01 && (
                         <span className="text-orange-600 dark:text-orange-400 ml-2">
@@ -996,15 +1024,19 @@ export function ExpenseForm({
                     </div>
                   );
                 })()}
+
+                {/* Validation warning */}
+                {validationWarning && (
+                  <div className="p-2 rounded text-orange-600 dark:text-orange-400 text-xs bg-orange-50 dark:bg-orange-900/20 border border-orange-200/70 dark:border-orange-700/50">
+                    {validationWarning}
+                  </div>
+                )}
               </div>
+
             </div>
 
-            {validationWarning && (
-              <div className="p-2 rounded text-orange-600 dark:text-orange-400 text-xs bg-orange-50 dark:bg-orange-900/20">
-                {validationWarning}
-              </div>
-            )}
           </div>
+
         </div>
       </div>
 

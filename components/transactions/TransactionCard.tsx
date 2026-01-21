@@ -33,11 +33,7 @@ const categoryColors: Record<string, string> = {
 };
 
 export function TransactionCard({ type, expense, settlement, currentUserId, onEdit, viewMode = "card" }: TransactionCardProps) {
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleClick = () => {
     if (onEdit) {
@@ -54,10 +50,10 @@ export function TransactionCard({ type, expense, settlement, currentUserId, onEd
       ? categoryColors[expense.category] || categoryColors.Other
       : categoryColors.Other;
 
-    const expenseDate = mounted && expense.expense_date
-      ? formatTransactionDate(expense.expense_date, mounted)
-      : mounted && expense.created_at
-      ? formatTransactionDate(expense.created_at, mounted)
+    const expenseDate = expense.expense_date
+      ? formatTransactionDate(expense.expense_date)
+      : expense.created_at
+      ? formatTransactionDate(expense.created_at)
       : "";
 
     // List view
@@ -197,8 +193,8 @@ export function TransactionCard({ type, expense, settlement, currentUserId, onEd
   if (type === "settlement" && settlement) {
     const fromUser = settlement.fromUser;
     const toUser = settlement.toUser;
-    const paymentDate = mounted && settlement.settled_at
-      ? formatTransactionDate(settlement.settled_at, mounted)
+    const paymentDate = settlement.settled_at
+      ? formatTransactionDate(settlement.settled_at)
       : "";
 
     // List view

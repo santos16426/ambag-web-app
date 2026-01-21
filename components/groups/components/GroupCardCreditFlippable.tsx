@@ -5,7 +5,8 @@ import { Group } from "@/types/group";
 import { Users, DollarSign, Calendar, User, Share2, X, UserPlus } from "lucide-react";
 import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/utils/currency";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner"
+import { toast } from "sonner";
+
 interface GroupCardCreditFlippableProps {
   group: Group & { image_url?: string | null; total_expenses?: number };
   isActive: boolean;

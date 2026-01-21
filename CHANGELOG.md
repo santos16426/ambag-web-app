@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Lazy Notification Loading** - notifications and unread count only fetched when notification popover opens
+- **Lazy User Data Loading** - user profile data only fetched from database when account settings dialog opens
+- **Supabase Notification Count Function** - efficient `get_unread_notification_count()` RPC function for counting unread notifications
+- **Group Image Management** - upload, update, and delete group images with compression support
+- **Edit Group Dialog** - comprehensive group editing interface with image upload and delete functionality
+- **Auto-Select Active Group** - automatically selects first available group after deleting the active group
 - **Consolidated Group Data Queries** - single RPC function `get_group_data_summary` to fetch expenses, settlements, members, and balance in one call
 - **Consolidated Member Queries** - single RPC function `get_group_members_summary` to fetch members, join requests, and pending invitations in one call
 - **Consolidated Group Summary** - single RPC function `get_user_groups_summary` to fetch all group data with statistics in one call
@@ -89,6 +95,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Auth Helper Functions** - utilities for debugging supabase authentication and session state
 
 ### Changed
+- **Notification Fetching** - replaced `getUser()` with `getSession()` to use cached session data and eliminate duplicate API calls
+- **User Data Fetching** - replaced `getUser()` with `getSession()` in all client-side queries to reduce network requests
+- **Notification Count Badge** - badge only updates when notification popover is opened or closed, not on mount
 - **Optimized Initial Load** - reduced API calls by consolidating member, expense, and group data queries into single RPC functions
 - **Expense List Data Fetching** - now uses store data when available, only fetches counts when store has expense data
 - **Group Members List** - uses consolidated `get_group_members_summary` RPC instead of multiple separate queries
@@ -133,6 +142,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **State Management** - migrated from prop drilling to Zustand store for group and member state
 
 ### Fixed
+- **Infinite Loop in AccountSettingsDialog** - fixed useEffect dependency array causing infinite user data fetches
+- **Duplicate Auth API Calls** - eliminated duplicate `/auth/v1/user` calls by using `getSession()` instead of `getUser()`
+- **TypeScript Error in AccountSettingsDialog** - fixed `avatar_url` type mismatch (null vs undefined)
+- **Infinite Recursion in Group Deletion** - simplified RLS policy to prevent recursive checks when deleting groups
 - **Infinite Loop in ContentWrapper** - fixed maximum update depth error by using separate hooks for member counts instead of object selector
 - **Duplicate API Calls** - eliminated duplicate `get_group_transactions` calls by tracking fetch state with refs
 - **Duplicate Member Summary Calls** - removed redundant `get_group_members_summary` call from ExpensesList by using store data
