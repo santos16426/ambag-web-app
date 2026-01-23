@@ -17,7 +17,8 @@ import { GroupCardCreditFlippable } from './GroupCardCreditFlippable'
 import { GroupCardCreditSkeleton } from './GroupCardCreditSkeleton'
 import { CreateGroupFormEnhanced, type CreateGroupFormData } from './CreateGroupFormEnhanced'
 import { JoinGroupDialog } from './JoinGroupDialog'
-import { CreditCard, Plus, Sparkles, LogIn } from 'lucide-react'
+import { EditGroupDialog } from './EditGroupDialog'
+import { CreditCard, Plus, Sparkles, LogIn, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Drawer,
@@ -54,6 +55,7 @@ export function GroupsList() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isJoinDrawerOpen, setIsJoinDrawerOpen] = useState(false)
   const [showCards, setShowCards] = useState(false) // For animation trigger
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -133,8 +135,7 @@ export function GroupsList() {
   }, [userId, setGroups, setActiveGroupId, setLoading, setError])
 
   const handleCreateGroup = async (data: CreateGroupFormData) => {
-    // TODO: Upload image to Supabase Storage first if present
-    // For now, create group without image
+    // Create group first to get the ID
     const result = await createGroupAction({
       name: data.name,
       description: data.description || null,
@@ -146,9 +147,42 @@ export function GroupsList() {
     }
 
     if (result.data) {
+      let imageUrl: string | null = null;
+
+      // Upload image if present
+      if (data.image && result.data.id) {
+        try {
+          const { uploadGroupImage } = await import('@/app/actions/group');
+          const { compressImage } = await import('@/lib/utils/image-compression');
+          
+          let fileToUpload = data.image;
+          try {
+            fileToUpload = await compressImage(data.image);
+          } catch (error) {
+            console.error("Compression error:", error);
+          }
+
+          const { data: uploadedUrl, error: uploadError } = await uploadGroupImage(
+            fileToUpload,
+            result.data.id
+          );
+
+          if (!uploadError && uploadedUrl) {
+            imageUrl = uploadedUrl;
+            // Update group with image URL
+            const { updateGroup } = await import('@/app/actions/group');
+            await updateGroup(result.data.id, { image_url: imageUrl });
+          }
+        } catch (error) {
+          console.error("Failed to upload group image:", error);
+          // Continue without image if upload fails
+        }
+      }
+
       // Add new group to list with complete data
       const newGroup: ExtendedGroup = {
         ...result.data,
+        image_url: imageUrl || result.data.image_url || null,
         member_count: 1 + data.members.length, // Creator + added members
         total_expenses: 0,
         user_role: 'admin',
@@ -365,7 +399,7 @@ export function GroupsList() {
             <DrawerTrigger asChild>
               <Button
                 size="sm"
-                className="gap-2 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-500 hover:from-purple-700 hover:via-purple-600 hover:to-purple-600 text-white dark:text-white"
+                className="gap-2 bg-linear-to-r from-purple-600 via-purple-500 to-purple-500 hover:from-purple-700 hover:via-purple-600 hover:to-purple-600 text-white dark:text-white"
               >
                 <Plus className="w-4 h-4" />
                 New Group
@@ -384,19 +418,55 @@ export function GroupsList() {
         </div>
       </div>
 
-      {/* Groups horizontal scroll - FIXED HEIGHT with slide animation ONLY after loading */}
-      <div className="relative h-52 w-full">
-        <div className={`flex gap-4 overflow-x-auto pb-4 h-full scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/20 ${showCards ? 'animate-slide-in-from-right' : ''}`}>
-          {groups.map((group) => (
-            <GroupCardCreditFlippable
-              key={group.id}
-              group={group}
-              isActive={group.id === activeGroupId}
-              onClick={() => handleGroupClick(group.id)}
-            />
-          ))}
+      {/* Groups horizontal scroll with edit button below active card */}
+      <div className="relative w-full">
+        <div className="relative h-52 w-full">
+          <div className={`flex gap-4 overflow-x-auto pb-4 h-full scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/20 ${showCards ? 'animate-slide-in-from-right' : ''}`}>
+            {groups.map((group) => (
+              <div key={group.id} className="relative shrink-0">
+                <GroupCardCreditFlippable
+                  group={group}
+                  isActive={group.id === activeGroupId}
+                  onClick={() => handleGroupClick(group.id)}
+                />
+                {/* Edit Button - Below active card */}
+                {group.id === activeGroupId && (
+                  <div className="mt-3 flex justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const activeGroup = groups.find(g => g.id === activeGroupId)
+                        if (activeGroup) {
+                          setEditDialogOpen(true)
+                        }
+                      }}
+                      className="gap-2"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Edit
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
+
+      {/* Edit Group Dialog */}
+      {activeGroupId && (() => {
+        const activeGroup = groups.find(g => g.id === activeGroupId)
+        if (!activeGroup) return null
+        
+        return (
+          <EditGroupDialog
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            group={activeGroup}
+          />
+        )
+      })()}
     </div>
   )
 }

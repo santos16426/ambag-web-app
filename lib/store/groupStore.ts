@@ -38,6 +38,7 @@ interface GroupState {
   setMembers: (members: GroupMember[]) => void;
   addMember: (member: GroupMember) => void;
   removeMember: (memberId: string) => void;
+  updateMember: (userId: string, updates: Partial<GroupMember['user']>) => void;
   setExpenses: (expenses: Expense[]) => void;
   addExpense: (expense: Expense) => void;
   updateExpense: (expenseId: string, updates: Partial<Expense>) => void;
@@ -119,6 +120,43 @@ export const useGroupStore = create<GroupState>()(
 
       removeMember: (memberId) => set((state) => ({
         members: state.members.filter((m) => m.id !== memberId),
+      })),
+
+      updateMember: (userId, updates) => set((state) => ({
+        members: state.members.map((m) =>
+          m.user.id === userId
+            ? {
+                ...m,
+                user: {
+                  ...m.user,
+                  ...updates,
+                },
+              }
+            : m
+        ),
+        // Also update members in groups array if they exist
+        groups: state.groups.map((group) => ({
+          ...group,
+          members: group.members?.map((member) =>
+            member.user.id === userId
+              ? {
+                  ...member,
+                  user: {
+                    ...member.user,
+                    ...updates,
+                  },
+                }
+              : member
+          ),
+          // Update creator if it matches
+          creator:
+            group.creator?.id === userId
+              ? {
+                  ...group.creator,
+                  ...updates,
+                }
+              : group.creator,
+        })),
       })),
 
       setLoading: (loading) => set({ loading }),
