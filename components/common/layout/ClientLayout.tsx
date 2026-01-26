@@ -40,9 +40,9 @@ export function ClientLayout({ userData, children, defaultOpen, defaultActiveMen
         defaultActiveMenu={defaultActiveMenu}
       >
         <AppSidebar {...userData} variant="inset"/>
-        <SidebarInset className="overflow-x-hidden">
+        <SidebarInset className="overflow-x-hidden bg-white">
           <SiteHeader/>
-          <main className="p-4">
+          <main className="p-8 bg-white">
             {children}
           </main>
         </SidebarInset>

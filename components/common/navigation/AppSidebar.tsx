@@ -60,10 +60,10 @@ export function AppSidebar({
               className="data-[slot=sidebar-menu-button]:p-1.5! h-20"
             >
               <Link href='/' className='flex items-center gap-3 group'>
-                <div className='flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br from-purple-600 to-purple-500 text-lg font-bold text-white shadow-lg transition-transform group-hover:scale-105'>
+                <div className='flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#4A00E0] to-[#8E2DE2] text-lg font-bold text-white shadow-[0px_4px_12px_rgba(0,0,0,0.08)] transition-transform group-hover:scale-105'>
                   A
                 </div>
-                <span className='text-2xl font-bold text-sidebar-foreground tracking-tight'>
+                <span className='text-2xl font-bold text-[#1A1A1A] tracking-tight'>
                   Ambag
                 </span>
               </Link>

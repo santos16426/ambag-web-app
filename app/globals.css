@@ -4,42 +4,79 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* Design System Colors - Equa Dashboard */
   --muted: oklch(0.97 0 0);
-  --accent-pastel-blue: #c9e4ff; /* soft pastel blue */
+  --accent-pastel-blue: #c9e4ff;
   --accent-pastel-blue-2: #9acfff;
   --accent-start: var(--accent-pastel-blue);
   --accent-end: var(--accent-pastel-blue-2);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  
+  /* Sidebar - White background per design system */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1A1A1A;
+  --sidebar-primary: #6B46C1;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: rgba(107, 70, 193, 0.05);
+  --sidebar-accent-foreground: #1A1A1A;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #6B46C1;
+  
+  /* Border radius - Design system values */
+  --radius: 0.5rem; /* 8px medium */
+  --radius-large: 1rem; /* 16px large */
+  --radius-small: 0.25rem; /* 4px small */
+  --radius-full: 9999px;
+  
+  /* Background and foreground - White and Charcoal Black */
+  --background: #FFFFFF;
+  --foreground: #1A1A1A;
+  
+  /* Card - White with shadow */
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1A;
+  
+  /* Popover */
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1A;
+  
+  /* Primary - Charcoal Black for buttons */
+  --primary: #1A1A1A;
+  --primary-foreground: #FFFFFF;
+  
+  /* Secondary */
   --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --secondary-foreground: #1A1A1A;
+  
+  /* Text colors - Design system */
+  --muted-foreground: #6B7280; /* Mid Grey */
+  --text-tertiary: #A0AEC0; /* Light Grey */
+  --text-success: #34D399; /* Emerald Green */
+  
+  /* Accent colors - Purple and Orange */
+  --accent: #6B46C1; /* Deep Lavender */
+  --accent-light: #B89DED; /* Light Lavender */
+  --accent-orange: #F59E0B; /* Vibrant Amber */
+  --accent-orange-light: #FCD34D; /* Light Amber */
+  --accent-foreground: #FFFFFF;
+  
+  /* Destructive */
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  
+  /* Borders and inputs - Light UI Border */
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #6B46C1;
+  
+  /* Chart colors - Purple theme */
+  --chart-1: #6B46C1; /* Deep Lavender */
+  --chart-2: #B89DED; /* Light Lavender */
+  --chart-3: #F59E0B; /* Vibrant Amber */
+  --chart-4: #FCD34D; /* Light Amber */
+  --chart-5: #34D399; /* Emerald Green */
+  
+  /* Shadow - Subtle Depth Shadow */
+  --shadow-subtle: 0px 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0px 6px 16px rgba(0, 0, 0, 0.12);
 }
 
 @theme inline {
@@ -74,13 +111,14 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
+  --radius-sm: var(--radius-small); /* 4px */
+  --radius-md: var(--radius); /* 8px */
+  --radius-lg: var(--radius-large); /* 16px */
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  --radius-full: var(--radius-full);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -101,15 +139,15 @@ body {
 }
 
 body {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-    Roboto, "Helvetica Neue", Arial;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "kern" 1, "liga" 1;
   text-rendering: optimizeLegibility;
 }
 
-/* Typography Improvements */
+/* Typography - Design System */
 h1,
 h2,
 h3,
@@ -119,26 +157,35 @@ h6 {
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.2;
+  color: #1A1A1A;
 }
 
 h1 {
-  font-size: clamp(2.5rem, 5vw, 4rem);
-  line-height: 1.1;
+  font-size: 3rem; /* heroHeading */
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 h2 {
-  font-size: clamp(2rem, 4vw, 3rem);
-  line-height: 1.2;
+  font-size: 1.5rem; /* sectionHeading */
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 h3 {
-  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-size: 1.2rem; /* cardMetricSmall */
   line-height: 1.3;
+  font-weight: 600;
 }
 
 p {
+  font-size: 0.95rem; /* bodyText */
   line-height: 1.6;
-  letter-spacing: 0.01em;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: #1A1A1A;
 }
 
 /* Glass Navigation Effect */

@@ -11,33 +11,33 @@ interface Step {
 const steps: Step[] = [
   {
     num: "01",
-    title: "Group Creation & Invitation",
+    title: "Create a Group",
     description:
-      "Create a group and invite your friends. Set up your group name and add members via email or phone number.",
+      "Create a group for your barkada, family, or roommates. Set a name and keep all shared expenses in one place.",
   },
   {
     num: "02",
-    title: "Bill Input (Scan or Manual)",
+    title: "Invite & Join",
     description:
-      "Take a photo of your receipt or manually enter the bill. Our OCR technology automatically extracts items and prices.",
+      "Invite people via email or share an invite code. Invited users are auto-approved, others create join requests you can review.",
   },
   {
     num: "03",
-    title: "Item Assignment",
+    title: "Add Expenses",
     description:
-      "Assign each item to the person who ordered it. Drag and drop or tap to assign items quickly.",
+      "Log group expenses with flexible splits. Assign who paid, choose equal or custom splits, and categorize each expense.",
   },
   {
     num: "04",
-    title: "Automatic Calculation",
+    title: "Track Balances",
     description:
-      "Ambag automatically calculates each person's share, including tax and tip. No math required!",
+      "Ambag calculates real-time balances per person, netting debts across the group so everyone clearly sees who owes what.",
   },
   {
     num: "05",
-    title: "Settle Up",
+    title: "Settle Up & Stay Notified",
     description:
-      "Review the split and settle up with one tap. Send payment requests or mark as paid directly in the app.",
+      "Record settlements, close out balances, and get notifications when you’re added to groups, expenses, or receive payments.",
   },
 ];
 
@@ -46,15 +46,15 @@ export default function HowItWorks() {
 
   return (
     <div>
-      <h2 className="mb-12 text-5xl font-bold text-slate-900">How It Works</h2>
+      <h2 className="mb-12 text-5xl font-bold text-[#1A1A1A] tracking-[-0.02em] leading-[1.2]">How It Works</h2>
 
       {/* Steps */}
       <div className="mb-8">
         <div className="relative mb-8">
           {/* Progress Line */}
-          <div className="absolute left-0 top-6 h-1 w-full bg-purple-100 rounded-full" />
+          <div className="absolute left-0 top-6 h-1 w-full bg-[#E5E7EB] rounded-full" />
           <div
-            className="absolute top-6 h-1 bg-gradient-to-r from-purple-600 to-purple-500 rounded-full transition-all duration-500"
+            className="absolute top-6 h-1 bg-[#6B46C1] rounded-full transition-all duration-500"
             style={{
               left: `${(activeStep - 1) * 25}%`,
               width: "25%",
@@ -75,15 +75,15 @@ export default function HowItWorks() {
                   }`}
                 >
                   <div
-                    className={`mb-3 flex h-14 w-14 items-center justify-center rounded-full border-2 shadow-lg cursor-pointer transition-all ${
+                    className={`mb-3 flex h-14 w-14 items-center justify-center rounded-full border-2 shadow-[0px_4px_12px_rgba(0,0,0,0.08)] cursor-pointer transition-all ${
                       isActive
-                        ? "border-purple-600 bg-purple-100 ring-4 ring-purple-200"
-                        : "border-purple-200 bg-white hover:border-purple-300"
+                        ? "border-[#6B46C1] bg-[rgba(107,70,193,0.1)] ring-4 ring-[rgba(107,70,193,0.2)]"
+                        : "border-[#E5E7EB] bg-white hover:border-[#6B46C1]/40"
                     }`}
                   >
                     <span
                       className={`text-base font-bold ${
-                        isActive ? "text-purple-700" : "text-slate-400"
+                        isActive ? "text-[#6B46C1]" : "text-[#A0AEC0]"
                       }`}
                     >
                       {step.num}
@@ -92,8 +92,8 @@ export default function HowItWorks() {
                   <p
                     className={`max-w-[120px] text-center text-xs font-medium transition-colors ${
                       isActive
-                        ? "text-slate-900 font-semibold"
-                        : "text-slate-500"
+                        ? "text-[#1A1A1A] font-semibold"
+                        : "text-[#6B7280]"
                     }`}
                   >
                     {step.title}
@@ -105,8 +105,8 @@ export default function HowItWorks() {
         </div>
 
         {/* Description */}
-        <div className="rounded-xl bg-gradient-to-r from-purple-50 to-purple-100/50 p-8 border-2 border-purple-100 min-h-[120px] transition-all">
-          <p className="text-lg text-slate-700">
+        <div className="rounded-2xl bg-white p-8 shadow-[0px_4px_12px_rgba(0,0,0,0.08)] min-h-[120px] transition-all">
+          <p className="text-lg text-[#1A1A1A]/80 leading-relaxed">
             {steps[activeStep - 1].description}
           </p>
         </div>

@@ -16,21 +16,27 @@ No more awkward conversations about money. No more spreadsheets. No more mental 
 
 ## ✨ Features
 
-### MVP (Phase 1) - Current
+### ✅ Currently Available
 - 🔐 **User Authentication** - Secure signup with email/password and Google OAuth
-- 👥 **Group Management** - Create groups, invite friends via shareable links
+- 👥 **Group Management** - Create groups, manage members, and organize expenses
+- 🔗 **Group Invitations** - Invite friends via email (even if they don't have an account yet)
+- 🎫 **Join by Invite Code** - Share 8-character invite codes for quick group joining
+- ✅ **Smart Join Logic** - Auto-approve invited users, require approval for others
 - 💰 **Expense Tracking** - Add expenses with custom splits (equal or custom amounts)
-- 📊 **Smart Balance Calculation** - Real-time balance updates and debt tracking
-- 🧮 **Debt Simplification Algorithm** - Minimize the number of transactions needed to settle up
+- 📊 **Smart Balance Calculation** - Real-time balance updates with automatic debt netting
+- 🧮 **Debt Simplification Algorithm** - Minimize transactions needed to settle up
 - 💳 **Settle Up** - Record payments and track settlement history
-- 🏷️ **Categories** - Organize expenses (Food, Rent, Entertainment, etc.)
+- 🏷️ **Expense Categories** - Organize expenses (Food, Rent, Entertainment, etc.)
+- 🔔 **Notifications System** - Real-time notifications for group activities, expenses, and payments
+- 👤 **User Profiles** - Customizable profiles with avatar uploads
 - 📱 **Responsive Design** - Works beautifully on mobile and desktop
+- 🌓 **Dark Mode** - Full dark mode support with smooth theme transitions
 
-### Coming Soon (Phase 2)
+### 🚧 Coming Soon
 - 💱 Multi-currency support with live exchange rates
 - 💸 Payment gateway integration (Stripe, PayPal)
 - 🧾 Receipt uploads with OCR
-- 📧 Email notifications
+- 📧 Email notifications (currently logged to console)
 - 📲 Push notifications
 - 📱 Native mobile apps (iOS & Android)
 - 🔄 Recurring expenses
@@ -43,7 +49,7 @@ No more awkward conversations about money. No more spreadsheets. No more mental 
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | Next.js 14 (App Router), React, TypeScript |
+| **Frontend** | Next.js 16 (App Router), React 19, TypeScript |
 | **UI** | Tailwind CSS + shadcn/ui |
 | **Backend** | Next.js API Routes + Supabase |
 | **Database** | PostgreSQL (via Supabase) |
@@ -313,30 +319,39 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📊 Project Status
 
-**Current Phase**: 🟡 Planning & Setup
-**Target Launch**: Week 4 (End of January 2026)
-**MVP Progress**: 0% complete
+**Current Phase**: 🟢 MVP Active Development
+**Status**: Core features implemented and in use
+**Last Updated**: January 2026
 
 ---
 
 ## 🎯 Roadmap
 
 ### ✅ Completed
-- [x] Architecture planning
-- [x] Brand identity
-- [x] Development roadmap
+- [x] Architecture planning and database schema
+- [x] User authentication (email/password + OAuth)
+- [x] Group management (create, invite, join)
+- [x] Group invitations system (email-based)
+- [x] Join requests with invite codes
+- [x] Expense tracking with custom splits
+- [x] Smart balance calculation with debt netting
+- [x] Settlement tracking
+- [x] Notifications system
+- [x] User profiles and avatar uploads
+- [x] Responsive UI with dark mode
+- [x] Row Level Security (RLS) policies
 
 ### 🏗️ In Progress
-- [x] Project setup
-- [x] Database schema
-- [x] Authentication
+- [ ] Production deployment
+- [ ] Email service integration
+- [ ] Performance optimization
 
 ### 📅 Upcoming
-- [ ] Group management
-- [ ] Expense tracking
-- [ ] Balance calculation
-- [ ] Settlement flow
-- [ ] Production deployment
+- [ ] Receipt scanning (OCR)
+- [ ] Multi-currency support
+- [ ] Payment gateway integration
+- [ ] Mobile apps
+- [ ] Recurring expenses
 
 ---
 

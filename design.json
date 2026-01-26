@@ -1,0 +1,469 @@
+{
+  "designSystemName": "Equa Dashboard Design System",
+  "version": "1.0.0",
+  "creativeDirectorNotes": "This design embodies a 'Productive Clarity' aesthetic. We aim for a clean, modern, and highly intuitive user experience that empowers users without overwhelming them. The interface is professional yet approachable, leveraging soft forms and strategic color accents to guide attention and convey progress.",
+  "designPrinciples": [
+    {
+      "name": "Productive Clarity",
+      "description": "Prioritize clear, concise information display and actionable insights. Reduce visual clutter to enhance focus on data and tasks."
+    },
+    {
+      "name": "Soft Modernism",
+      "description": "Utilize rounded corners, subtle shadows, and ample whitespace to create a friendly, contemporary feel, avoiding harsh edges or excessive gradients (except for intentional highlights)."
+    },
+    {
+      "name": "Intuitive Navigation",
+      "description": "Ensure core features are easily discoverable and accessible through a consistent, organized navigation structure and visual hierarchy."
+    },
+    {
+      "name": "Strategic Accents",
+      "description": "Employ a limited, vibrant color palette (primarily purple and orange) to highlight key information, interactive elements, and progress, drawing the eye without distraction."
+    },
+    {
+      "name": "Data-Driven Storytelling",
+      "description": "Present complex data through simple, legible visualizations that offer immediate understanding and encourage user engagement with their productivity metrics."
+    },
+    {
+      "name": "Consistent Experience",
+      "description": "Maintain uniformity in component styling, typography, and spacing across the entire application to build trust and reduce cognitive load."
+    }
+  ],
+  "colorPalette": {
+    "primary": {
+      "name": "Equa White",
+      "hex": "#FFFFFF",
+      "usage": "Main background for content areas, sidebar, and most cards. Represents cleanliness and spaciousness."
+    },
+    "text": {
+      "primary": {
+        "name": "Charcoal Black",
+        "hex": "#1A1A1A",
+        "usage": "Main headings, large numbers, and critical body text for maximum readability."
+      },
+      "secondary": {
+        "name": "Mid Grey",
+        "hex": "#6B7280",
+        "usage": "Subtitles, labels, inactive navigation items, placeholder text. Provides contrast without harshness."
+      },
+      "tertiary": {
+        "name": "Light Grey",
+        "hex": "#A0AEC0",
+        "usage": "Subtle descriptors, less important details, borders for inactive states."
+      },
+      "accentSuccess": {
+        "name": "Emerald Green",
+        "hex": "#34D399",
+        "usage": "Positive status indicators, percentage increases (e.g., '+12% vs last week')."
+      }
+    },
+    "accents": {
+      "purple": {
+        "name": "Deep Lavender",
+        "baseHex": "#6B46C1",
+        "lightHex": "#B89DED",
+        "gradient": "Linear gradient from #4A00E0 to #8E2DE2 (or similar deep purple to magenta for AI Insights card)",
+        "usage": "Primary brand accent. Active states, progress indicators in charts, interactive elements, button backgrounds (e.g., 'Reschedule'), and compelling card backgrounds for insights."
+      },
+      "orange": {
+        "name": "Vibrant Amber",
+        "baseHex": "#F59E0B",
+        "lightHex": "#FCD34D",
+        "usage": "Secondary brand accent. Progress indicators in time tracker, activity time dots, status tags (e.g., 'Work'), and subtle branding elements."
+      }
+    },
+    "uiElements": {
+      "border": {
+        "name": "Light UI Border",
+        "hex": "#E5E7EB",
+        "usage": "Subtle borders around input fields, inactive buttons, and separators where needed."
+      },
+      "shadow": {
+        "name": "Subtle Depth Shadow",
+        "colorHex": "#000000",
+        "opacity": "8%",
+        "offsetX": "0px",
+        "offsetY": "4px",
+        "blurRadius": "12px",
+        "spreadRadius": "0px",
+        "css": "0px 4px 12px rgba(0, 0, 0, 0.08)",
+        "usage": "Applied to cards and interactive elements to provide a gentle lift and spatial separation without appearing heavy."
+      }
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "primary": "Inter",
+      "fallbacks": ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+      "alternatives": ["Lato", "Rubik", "DM Sans"],
+      "description": "Modern sans-serif font family for clean, readable text. Inter is preferred for its excellent readability at all sizes."
+    },
+    "weights": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "sizes": {
+      "heroHeading": {
+        "size": "3rem",
+        "lineHeight": "1.2",
+        "weight": 700,
+        "usage": "Major page titles (e.g., 'Hello, Alex!')",
+        "letterSpacing": "-0.02em"
+      },
+      "sectionHeading": {
+        "size": "1.5rem",
+        "lineHeight": "1.3",
+        "weight": 600,
+        "usage": "Section titles within content areas (e.g., 'Productivity Trends')",
+        "letterSpacing": "-0.01em"
+      },
+      "cardMetricLarge": {
+        "size": "2.5rem",
+        "lineHeight": "1.2",
+        "weight": 700,
+        "usage": "Dominant numbers in statistic cards (e.g., '12 projects')",
+        "letterSpacing": "-0.02em"
+      },
+      "cardMetricSmall": {
+        "size": "1.2rem",
+        "lineHeight": "1.3",
+        "weight": 600,
+        "usage": "Detailed metrics (e.g., '18h Focus Hours')",
+        "letterSpacing": "0"
+      },
+      "navigationLink": {
+        "size": "1rem",
+        "lineHeight": "1.5",
+        "weight": 500,
+        "usage": "Sidebar navigation items",
+        "letterSpacing": "0"
+      },
+      "bodyText": {
+        "size": "0.95rem",
+        "lineHeight": "1.6",
+        "weight": 400,
+        "usage": "General descriptive text, list items",
+        "letterSpacing": "0"
+      },
+      "subLabel": {
+        "size": "0.85rem",
+        "lineHeight": "1.5",
+        "weight": 500,
+        "usage": "Supporting labels below metrics (e.g., 'In Progress')",
+        "letterSpacing": "0"
+      },
+      "caption": {
+        "size": "0.75rem",
+        "lineHeight": "1.4",
+        "weight": 400,
+        "usage": "Smallest text, metadata, tooltips",
+        "letterSpacing": "0.01em"
+      }
+    }
+  },
+  "spacing": {
+    "unit": "rem",
+    "baseUnit": 16,
+    "grid": {
+      "type": "Flexible 12-column grid system",
+      "description": "12-column grid for main content layout with explicit column/row gaps"
+    },
+    "gutters": {
+      "value": "1.5rem",
+      "pixels": 24,
+      "usage": "Spacing between major grid elements"
+    },
+    "padding": {
+      "extraLarge": {
+        "value": "2rem",
+        "pixels": 32,
+        "usage": "Large content areas, major sections"
+      },
+      "large": {
+        "value": "1.5rem",
+        "pixels": 24,
+        "usage": "Card padding, major component spacing"
+      },
+      "medium": {
+        "value": "1rem",
+        "pixels": 16,
+        "usage": "Standard component padding, button padding"
+      },
+      "small": {
+        "value": "0.75rem",
+        "pixels": 12,
+        "usage": "Tight spacing, compact components"
+      },
+      "extraSmall": {
+        "value": "0.5rem",
+        "pixels": 8,
+        "usage": "Minimal spacing, icon padding"
+      }
+    },
+    "margins": {
+      "betweenSections": {
+        "value": "2.5rem",
+        "pixels": 40,
+        "usage": "Vertical spacing between major sections"
+      },
+      "betweenCards": {
+        "value": "1.5rem",
+        "pixels": 24,
+        "usage": "Horizontal and vertical spacing between cards"
+      }
+    }
+  },
+  "componentStyling": {
+    "borderRadius": {
+      "large": "16px",
+      "medium": "8px",
+      "small": "4px",
+      "full": "9999px",
+      "usage": {
+        "large": "Cards, major containers",
+        "medium": "Buttons, input fields, navigation items",
+        "small": "Tags, badges, small elements",
+        "full": "Circular elements, icon buttons"
+      }
+    },
+    "cards": {
+      "background": "#FFFFFF",
+      "borderRadius": "16px",
+      "shadow": "0px 4px 12px rgba(0, 0, 0, 0.08)",
+      "padding": "1.5rem",
+      "border": "none",
+      "usage": "Primary container for content, data, and interactive elements"
+    },
+    "buttons": {
+      "primaryAction": {
+        "background": "#1A1A1A",
+        "color": "#FFFFFF",
+        "borderRadius": "8px",
+        "padding": "0.75rem 1rem",
+        "fontWeight": 500,
+        "fontSize": "1rem",
+        "border": "none",
+        "hover": {
+          "background": "#2A2A2A",
+          "transform": "translateY(-1px)",
+          "shadow": "0px 6px 16px rgba(0, 0, 0, 0.12)"
+        },
+        "usage": "Primary CTAs, important actions"
+      },
+      "secondaryAction": {
+        "background": "transparent",
+        "color": "#6B46C1",
+        "border": "1px solid #6B46C1",
+        "borderRadius": "8px",
+        "padding": "0.75rem 1rem",
+        "fontWeight": 500,
+        "fontSize": "1rem",
+        "hover": {
+          "background": "#6B46C1",
+          "color": "#FFFFFF"
+        },
+        "usage": "Secondary actions, alternative options"
+      },
+      "iconOnly": {
+        "background": "#1A1A1A",
+        "color": "#FFFFFF",
+        "borderRadius": "9999px",
+        "size": "40px",
+        "padding": "0",
+        "display": "flex",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "hover": {
+          "background": "#2A2A2A",
+          "transform": "scale(1.05)"
+        },
+        "usage": "Play/Pause/Stop buttons in Time Tracker, icon-only actions"
+      }
+    },
+    "navigation": {
+      "sidebar": {
+        "width": "280px",
+        "background": "#FFFFFF",
+        "itemPadding": "0.75rem 1.5rem",
+        "itemGap": "0.75rem",
+        "borderRadius": "8px",
+        "activeItem": {
+          "background": "#FFFFFF",
+          "color": "#6B46C1",
+          "fontWeight": 600,
+          "borderRadius": "8px",
+          "shadow": "0px 4px 12px rgba(0, 0, 0, 0.08)",
+          "indicator": true,
+          "indicatorColor": "#6B46C1"
+        },
+        "inactiveItem": {
+          "color": "#6B7280",
+          "fontWeight": 500,
+          "hover": {
+            "color": "#1A1A1A",
+            "background": "rgba(107, 70, 193, 0.05)"
+          }
+        }
+      }
+    },
+    "inputFields": {
+      "searchBar": {
+        "background": "#FFFFFF",
+        "border": "1px solid #E5E7EB",
+        "borderRadius": "8px",
+        "padding": "0.75rem 1rem",
+        "placeholderColor": "#6B7280",
+        "iconColor": "#6B7280",
+        "focus": {
+          "borderColor": "#6B46C1",
+          "outline": "none",
+          "shadow": "0px 0px 0px 3px rgba(107, 70, 193, 0.1)"
+        },
+        "usage": "Search inputs, text inputs, form fields"
+      }
+    },
+    "icons": {
+      "style": "Outline, minimalist, consistent stroke width",
+      "size": "24px",
+      "strokeWidth": "1.5px",
+      "color": {
+        "default": "#6B7280",
+        "active": "#6B46C1",
+        "primary": "#1A1A1A"
+      },
+      "usage": "Navigation icons, action icons, status indicators"
+    },
+    "charts": {
+      "barChart": {
+        "fillColorPrimary": "#6B46C1",
+        "fillColorSecondary": "#B89DED",
+        "inactiveBarColor": "#E5E7EB",
+        "tooltipBackground": "#1A1A1A",
+        "tooltipColor": "#FFFFFF",
+        "tooltipBorderRadius": "8px",
+        "tooltipPadding": "0.5rem 0.75rem"
+      },
+      "donutChart": {
+        "workColor": "#B89DED",
+        "lifeColor": "#6B46C1",
+        "strokeWidth": "8px",
+        "centerTextColor": "#1A1A1A",
+        "centerTextSize": "1.2rem",
+        "centerTextWeight": 600
+      },
+      "activityDots": {
+        "activeColor": "#F59E0B",
+        "inactiveColor": "#E5E7EB",
+        "dotSize": "8px",
+        "dotSpacing": "4px",
+        "dotBorderRadius": "50%"
+      }
+    },
+    "tags": {
+      "background": "#FCD34D",
+      "color": "#1A1A1A",
+      "borderRadius": "4px",
+      "padding": "0.25rem 0.5rem",
+      "fontSize": "0.75rem",
+      "fontWeight": 500,
+      "usage": "Status tags, category labels, badges"
+    },
+    "alertNotification": {
+      "background": "linear-gradient(135deg, #4A00E0 0%, #8E2DE2 100%)",
+      "color": "#FFFFFF",
+      "borderRadius": "16px",
+      "padding": "1.5rem",
+      "shadow": "0px 4px 12px rgba(0, 0, 0, 0.08)",
+      "usage": "Important alerts, AI insights, featured content cards"
+    },
+    "dividers": {
+      "color": "#E5E7EB",
+      "thickness": "1px",
+      "usage": "Section separators, list item dividers"
+    },
+    "skeletons": {
+      "background": "#F3F4F6",
+      "animation": "pulse",
+      "borderRadius": "8px",
+      "usage": "Loading states, placeholder content"
+    }
+  },
+  "layout": {
+    "sidebar": {
+      "width": "280px",
+      "position": "fixed",
+      "height": "100vh",
+      "background": "#FFFFFF",
+      "padding": "1.5rem"
+    },
+    "mainContent": {
+      "marginLeft": "280px",
+      "padding": "2rem",
+      "maxWidth": "none",
+      "background": "#FFFFFF"
+    },
+    "grid": {
+      "columns": 12,
+      "gap": "1.5rem",
+      "breakpoints": {
+        "mobile": "640px",
+        "tablet": "768px",
+        "desktop": "1024px",
+        "large": "1280px"
+      }
+    }
+  },
+  "animations": {
+    "transitions": {
+      "default": "all 0.2s ease-in-out",
+      "hover": "all 0.15s ease-in-out",
+      "focus": "all 0.1s ease-in-out"
+    },
+    "effects": {
+      "hoverLift": {
+        "transform": "translateY(-2px)",
+        "shadow": "0px 6px 16px rgba(0, 0, 0, 0.12)"
+      },
+      "activePress": {
+        "transform": "translateY(0px)",
+        "shadow": "0px 2px 8px rgba(0, 0, 0, 0.08)"
+      }
+    }
+  },
+  "accessibility": {
+    "contrastRatios": {
+      "minimum": "4.5:1 for normal text",
+      "enhanced": "7:1 for large text",
+      "nonText": "3:1 for UI components"
+    },
+    "focusIndicators": {
+      "style": "outline with purple accent",
+      "width": "2px",
+      "offset": "2px",
+      "color": "#6B46C1"
+    },
+    "interactiveElements": {
+      "minTouchTarget": "44px",
+      "minClickTarget": "24px"
+    }
+  },
+  "usageGuidelines": {
+    "colorApplication": {
+      "rule": "Use purple (#6B46C1) sparingly for primary actions and key highlights. Use orange (#F59E0B) for secondary accents and progress indicators. Maintain white backgrounds for clarity.",
+      "avoid": "Overusing accent colors, creating visual noise, using gradients except for special highlight cards"
+    },
+    "typographyHierarchy": {
+      "rule": "Maintain clear visual hierarchy using size, weight, and color. Hero headings should be bold and large, body text should be regular weight and readable.",
+      "avoid": "Using too many font sizes, inconsistent weights, text that's too small to read comfortably"
+    },
+    "spacingConsistency": {
+      "rule": "Use the defined spacing scale consistently. Maintain generous whitespace between sections and cards.",
+      "avoid": "Arbitrary spacing values, cramped layouts, inconsistent gaps"
+    },
+    "componentComposition": {
+      "rule": "Combine components using the defined spacing and layout guidelines. Cards should have consistent padding and shadows.",
+      "avoid": "Mixing different border radius sizes unnecessarily, inconsistent shadows, overlapping elements without clear separation"
+    }
+  }
+}
